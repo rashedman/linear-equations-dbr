@@ -461,6 +461,7 @@
       <div id="gateErr" style="color:#b91c1c; font-size:0.82rem; font-weight:700; margin-top:6px; display:none;">Please enter your name first to begin the module.</div>
     </div>
     <button class="btn" style="width:100%; padding:11px; font-size:1rem;" onclick="startModule()">Start Learning Journey →</button>
+    <button type="button" class="btn btn-outline" style="width:100%; padding:9px; font-size:0.88rem; margin-top:8px;" onclick="enterTeacherGate()">Teacher / Reviewer Mode 🔒</button>
     <div style="margin-top:14px; font-size:0.78rem; color:#64748b;">
       Runs 100% offline • Progress and mastery badges unlock automatically
     </div>
@@ -603,8 +604,11 @@
         </div>
         <div id="scaleMsg" class="feedback-box fb-warn" style="display:inline-block; margin-top:10px;">Goal: Isolate <span class="ltr">x</span> on one pan while keeping the scale balanced.</div>
       </div>
+    </div>
 
-      <h3>PhET Interactive Simulation (Offline)</h3>
+    <div class="card">
+      <h2>PhET Interactive Simulation (Offline)</h2>
+      <p style="margin:4px 0 10px 0; font-size:0.88rem;">Choose the simulation that fits your level directly inside the module (works 100% offline):</p>
       <div style="margin-bottom:8px; display:flex; gap:8px; flex-wrap:wrap;">
         <button class="btn btn-success" onclick="document.getElementById('phetFrame').src='./assets/equality-explorer_en.html'">Launch Equality Explorer (Main)</button>
         <button class="btn btn-outline" onclick="document.getElementById('phetFrame').src='./assets/equality-explorer-basics_en.html'">Launch Basics (Remedial)</button>
@@ -983,6 +987,16 @@ function refreshTabLocks() {
       b.textContent = '🔒 ' + labels[id];
     }
   });
+}
+
+function enterTeacherGate() {
+  if (!previewMode) {
+    togglePreviewMode();
+    if (!previewMode) return;
+  }
+  const inp = document.getElementById('studentName');
+  if (!inp.value.trim()) inp.value = 'Teacher / Reviewer';
+  startModule();
 }
 
 function togglePreviewMode() {
@@ -1674,9 +1688,14 @@ function getReportSummaryText() {
   const pre = state.preScore !== null ? `${state.preScore}/8` : "-";
   const form = state.formScore !== null ? `${state.formScore}/4` : "-";
   const post = state.postScore !== null ? `${state.postScore}/8` : "-";
+  const gain = (state.preScore !== null && state.postScore !== null) ? (state.postScore - state.preScore >= 0 ? `+${state.postScore - state.preScore}` : `${state.postScore - state.preScore}`) : "-";
   const track = currentTrack === 'enrich' ? 'E' : (currentTrack === 'remedial' ? 'R' : '-');
   const errs = Object.entries(state.errors).filter(([,v]) => v > 0).map(([k,v]) => `${k}:${v}`).join(",") || "0";
-  return `N:${name}|PRE:${pre}|FRM:${form}|T:${track}|PST:${post}|ERR:${errs}|XP:${xp}`;
+  const perrs = Object.entries(state.postErrors || {}).filter(([,v]) => v > 0).map(([k,v]) => `${k}:${v}`).join(",") || "0";
+  const bdgCount = ['bdgScale','bdgSniper','bdgChamp'].filter(id => document.getElementById(id)?.classList.contains('earned')).length;
+  const perfDone = done.perf ? 1 : 0;
+  const refDone = done.reflect ? 1 : 0;
+  return `N:${name}|PRE:${pre}|FRM:${form}|T:${track}|PST:${post}|GAIN:${gain}|ERR:${errs}|PERR:${perrs}|AI:${state.aiCount || 0}|PERF:${perfDone}|REF:${refDone}|BDG:${bdgCount}/3|XP:${xp}`;
 }
 
 function copyReportText() {
