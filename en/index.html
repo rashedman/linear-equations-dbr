@@ -1,0 +1,1987 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive Digital Module: Linear Equations (DBR + Gagné + AI)</title>
+<style>
+  :root {
+    --primary: #1e3a8a;
+    --primary-light: #2563eb;
+    --accent: #0f766e;
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --text: #0f172a;
+    --muted: #475569;
+    --ok: #15803d;
+    --ok-bg: #dcfce7;
+    --err: #b91c1c;
+    --err-bg: #fee2e2;
+    --warn: #b45309;
+    --warn-bg: #fef3c7;
+    --border: #cbd5e1;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", "Inter", "Arial", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+    line-height: 1.65;
+  }
+  .ltr {
+    direction: ltr;
+    unicode-bidi: isolate;
+    display: inline-block;
+    font-family: "Consolas", "Segoe UI", sans-serif;
+    font-weight: 700;
+  }
+  /* Header */
+  header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+    color: #fff;
+    padding: 16px 20px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+  }
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header-title h1 { margin: 0 0 4px 0; font-size: 1.35rem; }
+  .header-title p { margin: 0; font-size: 0.85rem; color: #cbd5e1; }
+  .student-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.12);
+    padding: 6px 12px;
+    border-radius: 8px;
+  }
+  .student-bar input {
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: none;
+    font-family: inherit;
+    font-size: 0.85rem;
+    width: 150px;
+  }
+  /* Progress & Nav */
+  .nav-wrap {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .nav-tabs {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    overflow-x: auto;
+    gap: 4px;
+    padding: 8px 12px;
+  }
+  .tab-btn {
+    border: 1px solid transparent;
+    background: #f8fafc;
+    color: var(--muted);
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    transition: 0.2s;
+  }
+  .tab-btn:hover { background: #e0f2fe; color: var(--primary); }
+  .tab-btn.active {
+    background: var(--primary);
+    color: #fff;
+  }
+  .tab-btn.locked {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .xp-bar-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 6px 14px 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    border-top: 1px solid #f1f5f9;
+  }
+  .prog-track {
+    flex: 1;
+    min-width: 140px;
+    height: 10px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .prog-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #2563eb, #16a34a);
+    transition: width 0.4s ease;
+  }
+  .xp-pill {
+    background: #fef3c7;
+    color: #92400e;
+    font-weight: 800;
+    padding: 2px 10px;
+    border-radius: 999px;
+    border: 1px solid #fde68a;
+  }
+  .badge-chip {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #94a3b8;
+    border: 1px solid #e2e8f0;
+    font-weight: 700;
+  }
+  .badge-chip.earned {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #86efac;
+  }
+  .flip-card {
+    border: 2px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 14px;
+    cursor: pointer;
+    background: #fefce8;
+    transition: transform 0.2s, border-color 0.2s, background 0.2s;
+    user-select: none;
+  }
+  .flip-card:hover { transform: translateY(-2px); border-color: var(--primary-light); }
+  .flip-card.flipped { background: #f0fdf4; border-color: #16a34a; }
+  .flip-back { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #86efac; font-size: 0.88rem; }
+  .flip-card.flipped .flip-back { display: block; }
+  .cmap-node {
+    background: #eff6ff;
+    border: 2px solid #2563eb;
+    border-radius: 10px;
+    padding: 8px 12px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.84rem;
+  }
+  .toast-bar {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0f172a;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    z-index: 300;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    display: none;
+  }
+  /* Main Container */
+  main {
+    max-width: 1100px;
+    margin: 20px auto 80px auto;
+    padding: 0 16px;
+  }
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Card-by-card Pager */
+  .section > .card { display: none; }
+  .section > .card.card-active { display: block; animation: fadeIn 0.25s ease; }
+  .card-pager {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 10px;
+  }
+  .card-step-badge {
+    display: inline-block;
+    background: #eff6ff;
+    color: var(--primary);
+    font-weight: 800;
+    font-size: 0.8rem;
+    padding: 3px 12px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+  .quiz-pager {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--muted);
+  }
+  #pretestContainer .q-item, #posttestContainer .q-item, #formativeContainer .q-item { display: none; }
+  #pretestContainer .q-item.q-active, #posttestContainer .q-item.q-active, #formativeContainer .q-item.q-active { display: block; animation: fadeIn 0.2s ease; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  }
+  .card h2 {
+    margin: 0 0 12px 0;
+    color: var(--primary);
+    font-size: 1.2rem;
+    border-left: 4px solid var(--primary-light);
+    padding-left: 10px;
+  }
+  .card h3 { margin: 14px 0 8px 0; font-size: 1.02rem; color: var(--accent); }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 16px;
+  }
+  .btn {
+    background: var(--primary-light);
+    color: #fff;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: 0.2s;
+  }
+  .btn:hover { background: var(--primary); }
+  .btn-success { background: var(--ok); }
+  .btn-success:hover { background: #166534; }
+  .btn-outline {
+    background: #fff;
+    color: var(--primary);
+    border: 1.5px solid var(--primary-light);
+  }
+  .btn-outline:hover { background: #eff6ff; }
+  .btn-warn { background: var(--warn); }
+
+  /* Quiz Items */
+  .q-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 12px;
+    background: #f8fafc;
+  }
+  .q-text { font-weight: 700; margin-bottom: 8px; }
+  .opt-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    margin: 4px 0;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: 0.15s;
+  }
+  .opt-label:hover { border-color: var(--primary-light); background: #eff6ff; }
+  .feedback-box {
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    display: none;
+  }
+  .fb-ok { display: block; background: var(--ok-bg); color: var(--ok); border: 1px solid #86efac; }
+  .fb-err { display: block; background: var(--err-bg); color: var(--err); border: 1px solid #fca5a5; }
+  .fb-warn { display: block; background: var(--warn-bg); color: var(--warn); border: 1px solid #fcd34d; }
+
+  /* Balance Simulation */
+  .balance-stage {
+    background: #f8fafc;
+    border: 2px dashed #94a3b8;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+  .pans {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 30px;
+    margin: 16px 0;
+    flex-wrap: wrap;
+  }
+  .pan {
+    min-width: 190px;
+    padding: 14px;
+    border-radius: 10px;
+    background: #fff;
+    border: 2px solid var(--primary);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+  }
+  .tokens {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 8px;
+    min-height: 40px;
+  }
+  .tok-x {
+    background: #2563eb;
+    color: #fff;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-weight: 800;
+  }
+  .tok-1 {
+    background: #0f766e;
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 50%;
+    font-weight: 800;
+    font-size: 0.85rem;
+  }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--border); padding: 9px 11px; text-align: left; }
+  th { background: #eff6ff; color: var(--primary); }
+
+  /* AI Assistant Floating Panel */
+  .ai-fab {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #0f766e, #0d9488);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 20px;
+    font-family: inherit;
+    font-weight: 800;
+    font-size: 0.92rem;
+    box-shadow: 0 8px 24px rgba(15, 118, 110, 0.35);
+    cursor: pointer;
+    z-index: 100;
+  }
+  .ai-drawer {
+    position: fixed;
+    bottom: 76px;
+    right: 20px;
+    width: 350px;
+    max-width: calc(100vw - 32px);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.22);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 101;
+  }
+  .ai-drawer.open { display: flex; }
+  .ai-head {
+    background: #0f766e;
+    color: #fff;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+  }
+  .ai-msgs {
+    height: 240px;
+    overflow-y: auto;
+    padding: 12px;
+    background: #f8fafc;
+    font-size: 0.86rem;
+  }
+  .msg { margin-bottom: 8px; padding: 8px 10px; border-radius: 8px; max-width: 90%; }
+  .msg-bot { background: #e0f2fe; color: #0f172a; margin-right: auto; }
+  .msg-user { background: #1e3a8a; color: #fff; margin-left: auto; }
+  .ai-foot { padding: 8px; border-top: 1px solid var(--border); display: flex; gap: 6px; }
+  .ai-foot input { flex: 1; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; }
+  .ai-chips { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 8px; background: #f1f5f9; border-top: 1px solid #e2e8f0; }
+  .chip {
+    background: #fff; border: 1px solid #cbd5e1; border-radius: 999px;
+    padding: 3px 9px; font-size: 0.76rem; cursor: pointer; font-family: inherit;
+  }
+  .chip:hover { background: #e0f2fe; border-color: #2563eb; }
+
+  textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 0.9rem; }
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 0.78rem; font-weight: 700; }
+  .b-blue { background: #dbeafe; color: #1e40af; }
+  .b-green { background: #dcfce7; color: #166534; }
+
+  @media print {
+    header, .nav-wrap, .ai-fab, .ai-drawer, .card-pager, .no-print, .section:not(#tab6) { display: none !important; }
+    #tab6, #tab6 > .card { display: block !important; box-shadow: none !important; border: none !important; }
+    body { background: #fff !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="toastBar" class="toast-bar"></div>
+
+<!-- Welcome Gate -->
+<div id="welcomeGate" style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%);">
+  <div style="background:#fff; border-radius:16px; max-width:520px; width:100%; padding:28px; box-shadow:0 20px 40px rgba(0,0,0,0.3); text-align:center;">
+    <div style="font-size:2.4rem; margin-bottom:6px;">📐</div>
+    <h1 style="margin:0 0 6px 0; font-size:1.35rem; color:#1e3a8a;">Interactive Digital Module: Linear Equations</h1>
+    <p style="margin:0 0 18px 0; color:#475569; font-size:0.9rem;">
+      Grade 7 (Prep 1) – Term 1 | Unit 2 (Algebra) – Lesson 2-2<br>
+      <span style="font-size:0.8rem; color:#0f766e;">Designed via DBR + Gagné's 9 Events + Adaptive AI</span>
+    </p>
+    <div style="text-align:left; margin-bottom:14px;">
+      <label for="studentName" style="font-weight:700; font-size:0.9rem; display:block; margin-bottom:6px;">Student Name (required to start &amp; save report):</label>
+      <input type="text" id="studentName" placeholder="Enter your full name here..." style="width:100%; padding:10px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-family:inherit; font-size:0.95rem;" onkeydown="if(event.key==='Enter') startModule()">
+      <div id="gateErr" style="color:#b91c1c; font-size:0.82rem; font-weight:700; margin-top:6px; display:none;">Please enter your name first to begin the module.</div>
+    </div>
+    <button class="btn" style="width:100%; padding:11px; font-size:1rem;" onclick="startModule()">Start Learning Journey →</button>
+    <div style="margin-top:14px; font-size:0.78rem; color:#64748b;">
+      Runs 100% offline • Progress and mastery badges unlock automatically
+    </div>
+  </div>
+</div>
+
+<div id="mainApp" style="display:none;">
+<header>
+  <div class="header-inner">
+    <div class="header-title">
+      <h1>Interactive Digital Module: Linear Equations (Grade 7)</h1>
+      <p>Unit 2: Algebra – Lesson (2-2) | DBR Framework + Gagné's 9 Events + Adaptive AI</p>
+    </div>
+    <div class="student-bar">
+      <span>Student:</span>
+      <strong id="headerStudentName" style="color:#fef08a;">—</strong>
+      <button type="button" id="previewBtn" onclick="togglePreviewMode()" style="background:rgba(255,255,255,0.18); color:#fff; border:1px solid rgba(255,255,255,0.35); border-radius:6px; padding:4px 9px; font-family:inherit; font-size:0.76rem; cursor:pointer; font-weight:700;" title="For teachers &amp; reviewers: unlock all stages freely">Teacher Mode 🔒</button>
+      <button type="button" onclick="resetSession()" style="background:rgba(239,68,68,0.28); color:#fff; border:1px solid rgba(255,255,255,0.35); border-radius:6px; padding:4px 8px; font-family:inherit; font-size:0.74rem; cursor:pointer; font-weight:700;" title="Clear saved progress for a new student">New Student ↺</button>
+    </div>
+  </div>
+</header>
+
+<div class="nav-wrap">
+  <nav class="nav-tabs">
+    <button class="tab-btn active" onclick="goTab('tab1')">1. Hook &amp; Objectives</button>
+    <button class="tab-btn locked" id="btn_tab2" onclick="goTab('tab2')">🔒 2. Pretest</button>
+    <button class="tab-btn locked" id="btn_tab3" onclick="goTab('tab3')">🔒 3. Concept &amp; Simulation</button>
+    <button class="tab-btn locked" id="btn_tab4" onclick="goTab('tab4')">🔒 4. Practice &amp; Adaptive Track</button>
+    <button class="tab-btn locked" id="btn_tab5" onclick="goTab('tab5')">🔒 5. Posttest &amp; Performance</button>
+    <button class="tab-btn locked" id="btn_tab6" onclick="goTab('tab6')">🔒 6. Mastery Report</button>
+  </nav>
+  <div class="xp-bar-wrap">
+    <span style="font-weight:700; color:var(--primary);">Progress: <strong id="progPct">0%</strong></span>
+    <div class="prog-track"><div id="progFill" class="prog-fill"></div></div>
+    <span class="xp-pill">⭐ <span id="xpVal">0</span> XP</span>
+    <span id="bdgScale" class="badge-chip">⚖️ Balance Master</span>
+    <span id="bdgSniper" class="badge-chip">🎯 Error Sniper</span>
+    <span id="bdgChamp" class="badge-chip">🏆 Equation Champion</span>
+  </div>
+</div>
+
+<main>
+  <!-- TAB 1: Hook & Objectives (Gagne 1 & 2) -->
+  <section id="tab1" class="section active">
+    <div class="card">
+      <h2>1. Real-Life Hook: The Taxi Fare Problem</h2>
+      <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:10px 14px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+        <span style="font-size:0.86rem; font-weight:700; color:#1e3a8a;">🔊 Listen to the problem audio:</span>
+        <audio controls style="height:36px; max-width:100%;">
+          <source src="./assets/taxi_intro_en.mp3" type="audio/mpeg">
+        </audio>
+      </div>
+      <p>
+        You took a taxi: the meter starts with a base fare of <strong>10 pounds</strong>, and adds <strong>5.5 pounds</strong> for every kilometer driven.
+        At the end of the ride, the meter showed <strong>87 pounds</strong>.
+        <strong>How many kilometers did you ride?</strong>
+      </p>
+      <div class="balance-stage">
+        <label for="kmSlider"><strong>Try moving the distance slider (<span class="ltr">x</span> km) to discover the answer:</strong></label><br>
+        <input type="range" id="kmSlider" min="1" max="20" value="5" style="width:260px; margin:10px 0;" oninput="updateTaxi(this.value)">
+        <div style="font-size:1.05rem;">
+          Distance: <strong id="kmVal">5</strong> km ⟹
+          Fare = <span class="ltr">5.5(<span id="kmVal2">5</span>) + 10 = <span id="fareVal">37.5</span></span> pounds
+        </div>
+        <div id="taxiMsg" class="feedback-box fb-warn" style="display:inline-block; margin-top:10px;">Target fare is 87 pounds — keep adjusting the slider!</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2. Learning Objectives (What You Will Master Today)</h2>
+      <ul>
+        <li>Translate real-life word problems accurately into <strong>linear equations in one variable</strong> (avoiding subtraction reversal!).</li>
+        <li>Distinguish between the <strong>replacement set</strong> (<span class="ltr">N, Z, Q</span>) and the <strong>solution set</strong> (including <span class="ltr">∅</span>).</li>
+        <li>Solve linear equations systematically using <strong>inverse operations</strong> and the <strong>distributive property</strong>.</li>
+        <li>Critique solutions, detect common errors, and verify answers algebraically.</li>
+      </ul>
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn" onclick="goTab('tab2')">Start Pretest Diagnostic →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2: Pretest & Prior Knowledge (Gagne 3) -->
+  <section id="tab2" class="section">
+    <div class="card">
+      <h2>3. Pretest Diagnostic (Identifying Common Errors E1–E4)</h2>
+      <p style="color:var(--muted); font-size:0.9rem;">
+        Answer the 8 questions below to diagnose your starting level. Your score and targeted focus areas will guide your learning path.
+      </p>
+      <div id="pretestContainer"></div>
+      <button id="submit_pre" class="btn btn-success" style="display:none; margin-top:10px;" onclick="gradeQuiz('pre')">Submit Pretest Answers</button>
+      <div id="preSummary" class="box" style="display:none; margin-top:12px; padding:12px; border-radius:8px; background:#eff6ff; border:1px solid #bfdbfe;"></div>
+    </div>
+  </section>
+
+  <!-- TAB 3: Concept, Simulation & Guided Discovery (Gagne 4 & 5) -->
+  <section id="tab3" class="section">
+    <div class="card">
+      <h2>Lesson Video (Linear Equations in Real Life)</h2>
+      <video id="lessonVideo" controls onended="done.video=true; updateProgressBar(); showToast('Great job! You can now move to the next part.');" onerror="document.getElementById('videoFallbackBox').style.display='block';" style="width:100%; max-height:360px; border-radius:10px; background:#000;">
+        <source src="./assets/Linear_Equations_Mystery.mp4" type="video/mp4">
+        Your browser does not support video playback.
+      </video>
+      <div id="videoFallbackBox" style="display:none; margin-top:8px; padding:10px 12px; background:#fefce8; border:1px solid #fde047; border-radius:8px; font-size:0.86rem;">
+        <strong>Note for Offline Video:</strong> Place your English NotebookLM video at <code>English_Module/assets/linear_equations_life_en.mp4</code> to play it here, or read the key summary below and click <strong>"Mark Summary Completed"</strong> to continue.
+        <br><button class="btn btn-outline" style="margin-top:8px; padding:5px 12px; font-size:0.82rem;" onclick="done.video=true; updateProgressBar(); refreshNextButtons(); showToast('Great! You can now continue to the Balance Lab.');">Mark Summary Completed ✓</button>
+      </div>
+      <p style="font-size:0.88rem; color:var(--muted); margin-top:8px;">
+        The video explains converting the taxi problem into <span class="ltr">5.5x + 10 = 87</span>, warns against reversing subtraction (<span class="ltr">3x - 8</span> not <span class="ltr">8 - 3x</span>), and demonstrates checking solutions in <span class="ltr">N, Z, Q</span>.
+        <span style="display:block; margin-top:4px; color:#b45309; font-weight:700;">⏳ Watch the video to the end (or mark the summary) to unlock the next part.</span>
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>4. Guided Balance Simulation &amp; Inverse Operations</h2>
+      <div class="balance-stage">
+        <div style="font-size:1.05rem; margin-bottom:8px;">
+          <strong>Interactive Balance Lab: Solve <span class="ltr">2x + 3 = 7</span></strong>
+        </div>
+        <div class="pans">
+          <div class="pan">
+            <div style="font-size:0.82rem; margin-bottom:4px;">Left Pan (<span class="ltr" id="leftExpr">2x + 3</span>)</div>
+            <div class="tokens" id="leftTokens">
+              <span class="tok-x">x</span><span class="tok-x">x</span>
+              <span class="tok-1">1</span><span class="tok-1">1</span><span class="tok-1">1</span>
+            </div>
+          </div>
+          <div style="font-size:1.8rem; font-weight:800; color:var(--primary);">=</div>
+          <div class="pan">
+            <div style="font-size:0.82rem; margin-bottom:4px;">Right Pan (<span class="ltr" id="rightExpr">7</span>)</div>
+            <div class="tokens" id="rightTokens">
+              <span class="tok-1">1</span><span class="tok-1">1</span><span class="tok-1">1</span><span class="tok-1">1</span><span class="tok-1">1</span><span class="tok-1">1</span><span class="tok-1">1</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-outline" onclick="scaleStep('sub3')">Step 1: Subtract 3 from both sides (-3)</button>
+          <button class="btn btn-outline" onclick="scaleStep('div2')">Step 2: Divide both sides by 2 (÷2)</button>
+          <button class="btn" onclick="scaleStep('reset')">Reset Balance</button>
+        </div>
+        <div id="scaleMsg" class="feedback-box fb-warn" style="display:inline-block; margin-top:10px;">Goal: Isolate <span class="ltr">x</span> on one pan while keeping the scale balanced.</div>
+      </div>
+
+      <h3>PhET Interactive Simulation (Offline)</h3>
+      <div style="margin-bottom:8px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-success" onclick="document.getElementById('phetFrame').src='./assets/equality-explorer_en.html'">Launch Equality Explorer (Main)</button>
+        <button class="btn btn-outline" onclick="document.getElementById('phetFrame').src='./assets/equality-explorer-basics_en.html'">Launch Basics (Remedial)</button>
+        <a class="btn btn-outline" href="./assets/equality-explorer_en.html" target="_blank" style="text-decoration:none;">Open Fullscreen ↗</a>
+      </div>
+      <iframe id="phetFrame" src="./assets/equality-explorer_en.html" style="width:100%; height:440px; border:1px solid var(--border); border-radius:10px; background:#fff;"></iframe>
+    </div>
+
+    <div class="card">
+      <h2>5. Core Concepts: Replacement Set vs. Solution Set</h2>
+      <table>
+        <tr><th>Concept</th><th>Simple Definition</th><th>Example (<span class="ltr">2x + 7 = 3</span>)</th></tr>
+        <tr>
+          <td><strong>Linear Equation</strong></td>
+          <td>An algebraic equality where the variable has power 1 (e.g., <span class="ltr">ax + b = c</span>, <span class="ltr">a ≠ 0</span>).</td>
+          <td><span class="ltr">2x + 7 = 3</span> (1st degree in <span class="ltr">x</span>)</td>
+        </tr>
+        <tr>
+          <td><strong>Replacement Set</strong></td>
+          <td>The allowed number universe you may choose solutions from (<span class="ltr">N, Z, Q</span>, or a given set).</td>
+          <td>Specified in the question (<span class="ltr">N</span> or <span class="ltr">Z</span>)</td>
+        </tr>
+        <tr>
+          <td><strong>Solution Set (S.S.)</strong></td>
+          <td>Values from the replacement set that make both sides equal.</td>
+          <td>
+            Algebraic root <span class="ltr">x = -2</span>:<br>
+            • In <span class="ltr">Z</span>: S.S. = <span class="ltr">{-2}</span><br>
+            • In <span class="ltr">N</span>: S.S. = <strong><span class="ltr">∅</span></strong> (since <span class="ltr">-2 ∉ N</span>)
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Interactive Flashcards: Avoid the 4 Common Traps (Click to Flip)</h2>
+      <div class="grid-2">
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <span class="badge b-blue">Trap 1 (E1): Subtraction Reversal</span>
+          <div style="font-weight:700; margin-top:6px;">❓ Does "subtract <span class="ltr">8</span> from <span class="ltr">3x</span>" mean <span class="ltr">8 - 3x</span>? <span style="color:#2563eb; font-size:0.8rem;">(Click to check)</span></div>
+          <div class="flip-back"><strong>❌ False!</strong> Rule: whatever comes after <strong>"from"</strong> goes first, so it is written <span class="ltr" style="color:#15803d;">3x - 8</span>.</div>
+        </div>
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <span class="badge b-blue">Trap 2 (E2): Ignoring Replacement Set</span>
+          <div style="font-weight:700; margin-top:6px;">❓ You solved <span class="ltr">x = -2</span> in <span class="ltr">N</span>; should you write <span class="ltr">{-2}</span>? <span style="color:#2563eb; font-size:0.8rem;">(Click to check)</span></div>
+          <div class="flip-back"><strong>❌ False!</strong> <span class="ltr">N = {0, 1, 2, ...}</span> has no negatives, so the solution set in <span class="ltr">N</span> is <strong><span class="ltr">∅</span></strong>.</div>
+        </div>
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <span class="badge b-blue">Trap 3 (E3): Sign &amp; Inverse Error</span>
+          <div style="font-weight:700; margin-top:6px;">❓ In <span class="ltr">2x + 7 = 3</span>, do we add <span class="ltr">3 + 7</span>? <span style="color:#2563eb; font-size:0.8rem;">(Click to check)</span></div>
+          <div class="flip-back"><strong>❌ False!</strong> Use the inverse operation by subtracting <span class="ltr">7</span> from both sides: <span class="ltr">2x = 3 - 7 = -4</span>.</div>
+        </div>
+        <div class="flip-card" onclick="this.classList.toggle('flipped')">
+          <span class="badge b-blue">Trap 4 (E4): Incomplete Distribution</span>
+          <div style="font-weight:700; margin-top:6px;">❓ Does <span class="ltr">2(x - 3)</span> equal <span class="ltr">2x - 3</span>? <span style="color:#2563eb; font-size:0.8rem;">(Click to check)</span></div>
+          <div class="flip-back"><strong>❌ Classic Trap!</strong> Multiply <span class="ltr">2</span> by BOTH terms: <span class="ltr" style="color:#15803d;">2x - 6</span> (or divide both sides by <span class="ltr">2</span> first).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Worked Examples (Gradual Mastery)</h2>
+      <div class="grid-2">
+        <div class="q-item">
+          <span class="badge b-blue">Example 1: Word Translation</span><br>
+          "When 15 is subtracted from twice a number, the result is 12."<br>
+          • Let the number = <span class="ltr">x</span>, twice the number = <span class="ltr">2x</span>.<br>
+          • What follows "from" comes first: <span class="ltr" style="color:#15803d;">2x - 15 = 12</span>
+        </div>
+        <div class="q-item">
+          <span class="badge b-blue">Example 2: Replacement Set (<span class="ltr">N</span> vs <span class="ltr">Z</span>)</span><br>
+          Find the solution set of <span class="ltr">2x + 7 = 3</span> in <span class="ltr">N</span> and in <span class="ltr">Z</span>:<br>
+          • <span class="ltr">2x = 3 - 7 = -4 ⇒ x = -2</span><br>
+          • In <span class="ltr">Z</span>: <span class="ltr">{-2}</span> | In <span class="ltr">N</span>: <strong><span class="ltr">∅</span></strong> (because <span class="ltr">-2 ∉ N</span>)
+        </div>
+        <div class="q-item">
+          <span class="badge b-blue">Example 3: Rational Solution (<span class="ltr">Q</span>)</span><br>
+          Solve in <span class="ltr">Q</span>: <span class="ltr">3x + 11 = 9</span><br>
+          • Subtract <span class="ltr">11</span> from both sides: <span class="ltr">3x = 9 - 11 = -2</span><br>
+          • Divide by <span class="ltr">3</span>: <span class="ltr" style="color:#15803d;">x = -2/3 ∈ Q</span>
+        </div>
+        <div class="q-item">
+          <span class="badge b-blue">Example 4: Distributive Property</span><br>
+          Solve: <span class="ltr">2(x - 3) = 8</span><br>
+          • <em>Distribute:</em> <span class="ltr">2x - 6 = 8 ⇒ 2x = 14 ⇒ x = 7</span><br>
+          • <em>Or divide by 2 first:</em> <span class="ltr">x - 3 = 4 ⇒ x = 7</span>
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <button class="btn btn-success" onclick="goTab('tab4')">Continue to Practice &amp; Adaptive Track →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 4: Formative Assessment & Single Adaptive Track (Gagne 6 & 7) -->
+  <section id="tab4" class="section">
+    <div class="card">
+      <h2>6. Critical Thinking Activity: "Spot the Error"</h2>
+      <p>Both <strong>Ahmed</strong> and <strong>Noha</strong> solved <span class="ltr">2x + 7 = 16</span> in <span class="ltr">Q</span> as follows:</p>
+      <div class="grid-2">
+        <div style="padding:12px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px;">
+          <strong>Ahmed's Solution:</strong><br>
+          <span class="ltr">2x + 7 = 16</span><br>
+          <span class="ltr">2x = 16 + 7 = 23</span><br>
+          <span class="ltr">x = 11.5</span>
+        </div>
+        <div style="padding:12px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px;">
+          <strong>Noha's Solution:</strong><br>
+          <span class="ltr">2x + 7 = 16</span><br>
+          <span class="ltr">2x = 16 - 7 = 9</span><br>
+          <span class="ltr">x = 4.5</span>
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <strong>Who followed the mathematically correct method?</strong>
+        <button class="btn btn-outline" onclick="checkCritique('ahmed')">Ahmed</button>
+        <button class="btn btn-outline" onclick="checkCritique('noha')">Noha</button>
+        <div id="critiqueFb" class="feedback-box"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Formative Assessment: Unlock Your Personalized Track</h2>
+      <p>Answer the 4 questions below so the module automatically routes you to the <strong>track tailored to your level</strong> (Remedial or Enrichment):</p>
+      <div id="formativeContainer"></div>
+      <button id="submit_form" class="btn btn-success" style="display:none; margin-top:10px;" onclick="gradeFormative()">Analyze Level &amp; Assign Track</button>
+      <div id="formativeSummary" style="display:none; margin-top:12px; padding:12px; border-radius:8px; background:#eff6ff; border:1px solid #bfdbfe;"></div>
+    </div>
+
+    <div class="card" id="adaptiveCard">
+      <h2 id="adaptiveTitle">Your Personalized Learning Track</h2>
+      <p id="adaptiveLockMsg" style="color:var(--muted);">Complete the 4-question Formative Assessment above first to unlock your assigned track.</p>
+
+      <div id="remedialBox" style="display:none; padding:14px; border:1px solid #fde68a; background:#fffbeb; border-radius:10px;">
+        <h3>Remedial Track (Step-by-Step Support)</h3>
+        <div style="background:#fff; border:1px solid #fcd34d; border-radius:8px; padding:10px; margin-bottom:12px; font-size:0.86rem;">
+          <strong>Quick Reminder:</strong>
+          (1) What follows "from" comes first | (2) Check membership in <span class="ltr">N, Z, Q</span> | (3) Flip sign / use inverse operation | (4) Distribute to every term inside parentheses.
+        </div>
+
+        <p style="font-size:0.88rem;"><strong>Remedial (1):</strong> Find the solution set of <span class="ltr">3(x - 2) = -12</span> in <span class="ltr">N</span>:</p>
+        <button class="btn btn-outline" onclick="adaptiveCheck('remedial', 'empty')"><span class="ltr">∅</span> (Empty Set)</button>
+        <button class="btn btn-outline" onclick="adaptiveCheck('remedial', '-2')"><span class="ltr">{-2}</span></button>
+        <button class="btn btn-outline" onclick="adaptiveCheck('remedial', '2')"><span class="ltr">{2}</span></button>
+        <div id="remedialFb" class="feedback-box"></div>
+
+        <p style="font-size:0.88rem; margin-top:12px;"><strong>Remedial (2):</strong> "Subtract <span class="ltr">4</span> from twice a number <span class="ltr">x</span> equals <span class="ltr">10</span>":</p>
+        <button class="btn btn-outline" onclick="adaptiveCheck('remedial2', 'ok')"><span class="ltr">2x - 4 = 10</span></button>
+        <button class="btn btn-outline" onclick="adaptiveCheck('remedial2', 'err')"><span class="ltr">4 - 2x = 10</span></button>
+        <div id="remedialFb2" class="feedback-box"></div>
+
+        <p style="font-size:0.88rem; margin-top:12px;"><strong>Remedial (3) — Step-by-Step:</strong> Expanding <span class="ltr">2(x + 3) = 4</span> gives:</p>
+        <button class="btn btn-outline" onclick="adaptiveCheck('remedial3', 'ok')"><span class="ltr">2x + 6 = 4</span>, and its S.S. in <span class="ltr">N</span> is <span class="ltr">∅</span></button>
+        <button class="btn btn-outline" onclick="adaptiveCheck('remedial3', 'err1')"><span class="ltr">2x + 3 = 4</span></button>
+        <button class="btn btn-outline" onclick="adaptiveCheck('remedial3', 'err2')"><span class="ltr">2x + 6 = 4</span>, and its S.S. in <span class="ltr">N</span> is <span class="ltr">{-1}</span></button>
+        <div id="remedialFb3" class="feedback-box"></div>
+
+        <p style="font-size:0.88rem; margin-top:12px;"><strong>Remedial (4) — Verification:</strong> Is <span class="ltr">x = 3</span> a solution to <span class="ltr">5x - 2 = 13</span>?</p>
+        <button class="btn btn-outline" onclick="adaptiveCheck('remedial4', 'yes')">Yes, because <span class="ltr">5(3) - 2 = 13</span></button>
+        <button class="btn btn-outline" onclick="adaptiveCheck('remedial4', 'no')">No, it does not satisfy equality</button>
+        <div id="remedialFb4" class="feedback-box"></div>
+      </div>
+
+      <div id="enrichBox" style="display:none; padding:14px; border:1px solid #bbf7d0; background:#f0fdf4; border-radius:10px;">
+        <h3>Enrichment Track (Creative &amp; Higher-Order Challenges)</h3>
+        <p style="font-size:0.88rem;"><strong>Challenge (1):</strong> A money box contains <span class="ltr">42</span> banknotes of <span class="ltr">20</span> EGP and <span class="ltr">50</span> EGP, with a total value of <span class="ltr">1800</span> EGP. How many <span class="ltr">20</span> EGP notes (<span class="ltr">x</span>) are there?</p>
+        <button class="btn btn-outline" onclick="adaptiveCheck('enrich', '10')">10 notes</button>
+        <button class="btn btn-outline" onclick="adaptiveCheck('enrich', '32')">32 notes</button>
+        <button class="btn btn-outline" onclick="adaptiveCheck('enrich', '20')">20 notes</button>
+        <div id="enrichFb" class="feedback-box"></div>
+
+        <p style="font-size:0.88rem; margin-top:12px;"><strong>Challenge (2):</strong> An interview queue has <span class="ltr">35</span> applicants, with 2 minutes per applicant. Salma has <span class="ltr">x + 2</span> people ahead of her and <span class="ltr">3x - 4</span> people behind her. How many minutes until Salma reaches the front?</p>
+        <button class="btn btn-outline" onclick="adaptiveCheck('enrich2', '22')">22 minutes</button>
+        <button class="btn btn-outline" onclick="adaptiveCheck('enrich2', '9')">9 minutes</button>
+        <button class="btn btn-outline" onclick="adaptiveCheck('enrich2', '18')">18 minutes</button>
+        <div id="enrichFb2" class="feedback-box"></div>
+
+        <p style="font-size:0.88rem; margin-top:12px;"><strong>Challenge (3) — Geometry + Algebra:</strong> An isosceles triangle has side lengths <span class="ltr">x</span>, <span class="ltr">x</span>, and <span class="ltr">(x + 4)</span> cm. If its perimeter is <span class="ltr">34</span> cm, find <span class="ltr">x</span>:</p>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <input type="number" id="enrich3Inp" placeholder="Enter value of x..." style="padding:7px 10px; border:1px solid #cbd5e1; border-radius:6px; width:150px;">
+          <button class="btn btn-outline" onclick="adaptiveCheck('enrich3', 'check')">Check</button>
+        </div>
+        <div id="enrichFb3" class="feedback-box"></div>
+
+        <p style="font-size:0.88rem; margin-top:12px;"><strong>Challenge (4) — Creative Design:</strong> Write your own linear equation whose solution set in <span class="ltr">Z</span> is <span class="ltr">{-3}</span> and in <span class="ltr">N</span> is <span class="ltr">∅</span> (example: <span class="ltr">2x + 6 = 0</span>):</p>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <input type="text" id="enrich4Inp" placeholder="Type your equation here..." style="padding:7px 10px; border:1px solid #cbd5e1; border-radius:6px; flex:1; min-width:180px;">
+          <button class="btn btn-outline" onclick="adaptiveCheck('enrich4', 'check')">Verify Equation</button>
+        </div>
+        <div id="enrichFb4" class="feedback-box"></div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <button class="btn btn-outline" style="font-size:0.78rem; padding:5px 10px;" onclick="toggleOtherTrack()">Preview Other Track (Teacher Only)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 5: Posttest, Performance Task, Reflection (Gagne 8 & 9) -->
+  <section id="tab5" class="section">
+    <div class="card">
+      <h2>7. Equivalent Posttest (Measuring Learning Gain)</h2>
+      <div id="posttestContainer"></div>
+      <button id="submit_post" class="btn btn-success" style="display:none; margin-top:10px;" onclick="gradeQuiz('post')">Submit Posttest Answers</button>
+      <div id="postSummary" class="box" style="display:none; margin-top:12px; padding:12px; border-radius:8px; background:#f0fdf4; border:1px solid #86efac;"></div>
+    </div>
+
+    <div class="card">
+      <h2>Performance Task (Deep Understanding)</h2>
+      <p>
+        Hazem has a wooden strip of length <strong>180 cm</strong> and wants to build a rectangular frame whose length is <strong>15 cm</strong> longer than its width.
+      </p>
+      <label><strong>1. Write the linear equation (let width = <span class="ltr">x</span>):</strong></label>
+      <input type="text" id="perfEq" placeholder="Example: 2(x + x + 15) = 180" style="width:100%; padding:8px; margin:4px 0 10px 0; border:1px solid #cbd5e1; border-radius:6px;">
+      <label><strong>2. Find the width and length. Are these dimensions valid if the carpenter requires whole integers (no decimals)? Explain:</strong></label>
+      <textarea id="perfAns" rows="3" placeholder="Write your solution and explanation here..."></textarea>
+      <button class="btn" style="margin-top:8px;" onclick="savePerf()">Save Performance Task &amp; View Rubric</button>
+      <div id="perfFb" class="feedback-box"></div>
+      <div style="margin-top:10px; font-size:0.82rem; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:8px 10px;">
+        <strong>Scoring Rubric (4 Points):</strong>
+        (1) Formulating <span class="ltr">2(x + x + 15) = 180</span> (1 pt) | (2) Finding <span class="ltr">37.5</span> cm &amp; <span class="ltr">52.5</span> cm (1.5 pts) | (3) Explaining invalidity in <span class="ltr">Z</span> (1.5 pts).
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Lesson Summary, Concept Map &amp; Final Reflection</h2>
+      <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:12px; margin-bottom:12px;">
+        <div style="font-weight:800; color:var(--primary); text-align:center; margin-bottom:8px;">🗺️ Linear Equations Concept Map</div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:8px;">
+          <div class="cmap-node">1. Word Translation<br><span style="font-size:0.75rem; font-weight:400;">"from X" comes first</span></div>
+          <div class="cmap-node">2. Balance &amp; Inverse Ops<br><span style="font-size:0.75rem; font-weight:400;">Add/Sub then Mul/Div</span></div>
+          <div class="cmap-node">3. Distribution<br><span style="font-size:0.75rem; font-weight:400;"><span class="ltr">a(x+b) = ax + ab</span></span></div>
+          <div class="cmap-node">4. Replacement Set<br><span style="font-size:0.75rem; font-weight:400;"><span class="ltr">N, Z, Q</span> or <span class="ltr">∅</span></span></div>
+        </div>
+      </div>
+      <label><strong>Final Reflection:</strong> In one sentence, write the most important thing you learned today or an error you will never repeat:</label>
+      <textarea id="reflectText" rows="2" placeholder="Example: I will always check whether the answer belongs to N or Z before writing the solution set..."></textarea>
+      <button class="btn btn-success" style="margin-top:8px;" onclick="saveReflection()">Save Reflection &amp; View Mastery Report →</button>
+    </div>
+  </section>
+
+  <!-- TAB 6: Learning Analytics Report -->
+  <section id="tab6" class="section">
+    <div class="card">
+      <h2>8. Student Mastery &amp; Learning Analytics Report</h2>
+      <p style="font-size:0.88rem; color:var(--muted);">
+        This summary can be printed or exported as JSON for research tracking (Pretest vs. Posttest gain + error profile).
+      </p>
+      <div style="display:grid; grid-template-columns:1fr auto; gap:16px; align-items:start;">
+        <table>
+          <tr><th>Metric</th><th>Value</th></tr>
+          <tr><td>Student Name</td><td id="repName">Not set</td></tr>
+          <tr><td>Pretest Score</td><td id="repPre">Not completed</td></tr>
+          <tr><td>Posttest Score</td><td id="repPost">Not completed</td></tr>
+          <tr><td>Diagnosed Pretest Errors</td><td id="repErr">None</td></tr>
+          <tr><td>Performance Task</td><td id="repPerf">Not saved</td></tr>
+          <tr><td>Final Reflection</td><td id="repRef">Not saved</td></tr>
+        </table>
+        <div style="text-align:center; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:10px; min-width:190px;">
+          <div style="font-size:0.78rem; font-weight:800; color:var(--primary); margin-bottom:6px;">📱 Quick Verification QR</div>
+          <div id="qrContainer" style="display:inline-block; background:#fff; padding:4px; border-radius:6px; border:1px solid #e2e8f0;"></div>
+          <div style="font-size:0.7rem; color:#64748b; margin-top:4px;">Scan with any phone camera to read the summary</div>
+        </div>
+      </div>
+      <div class="no-print" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+        <button class="btn" onclick="window.print()">Print Report / Save as PDF</button>
+        <button class="btn btn-outline" onclick="exportJSON()">Export Student Data (JSON)</button>
+        <button class="btn btn-outline" onclick="copyReportText()">Copy Summary Text</button>
+      </div>
+    </div>
+  </section>
+</main>
+</div>
+
+<!-- AI Assistant Drawer -->
+<button class="ai-fab" onclick="toggleAI()">🤖 AI Math Tutor</button>
+<div id="aiDrawer" class="ai-drawer">
+  <div class="ai-head">
+    <span>AI Math Tutor (Linear Equations)</span>
+    <button onclick="toggleAI()" style="background:none;border:none;color:#fff;font-size:1.1rem;cursor:pointer;">✕</button>
+  </div>
+  <div id="aiMsgs" class="ai-msgs">
+    <div class="msg msg-bot">
+      Hello! I'm your Math Tutor. Ask me about <strong>replacement sets, ∅, distributive property, subtraction wording</strong>, or type any equation like <span class="ltr">2x + 3 = 11</span> and I'll solve it step-by-step!
+    </div>
+  </div>
+  <div class="ai-chips">
+    <button class="chip" onclick="askQuick('Explain replacement set')">Replacement Set</button>
+    <button class="chip" onclick="askQuick('When is the answer ∅?')">When is S.S. = ∅?</button>
+    <button class="chip" onclick="askQuick('How to translate subtract from')">Subtract "from"</button>
+    <button class="chip" onclick="askQuick('Hint for current step')">Current Hint</button>
+  </div>
+  <div class="ai-foot">
+    <input type="text" id="aiInput" placeholder="Ask a question or type an equation..." onkeydown="if(event.key==='Enter') sendAI()">
+    <button class="btn" style="padding:7px 12px;" onclick="sendAI()">Send</button>
+  </div>
+</div>
+
+<script>
+let xp = 0;
+let previewMode = false;
+const done = {
+  taxi: false, pre: false, video: false, scaleSub: false, scaleDiv: false,
+  critique: false, formative: false, track1: false, track2: false, track3: false, track4: false,
+  post: false, perf: false, reflect: false
+};
+const unlocked = { tab1: true, tab2: false, tab3: false, tab4: false, tab5: false, tab6: false };
+
+function showToast(msg) {
+  const el = document.getElementById('toastBar');
+  el.textContent = msg;
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.display = 'none'; }, 3500);
+}
+
+function addXP(pts, badgeId) {
+  xp += pts;
+  document.getElementById('xpVal').textContent = xp;
+  if (badgeId) document.getElementById(badgeId).classList.add('earned');
+  updateProgressBar();
+  saveLocalState();
+}
+
+function updateProgressBar() {
+  const keys = ['taxi','pre','video','scaleDiv','critique','formative','track1','track2','track3','track4','post','perf','reflect'];
+  const count = keys.filter(k => done[k]).length;
+  const pct = Math.round((count / keys.length) * 100);
+  document.getElementById('progPct').textContent = pct + '%';
+  document.getElementById('progFill').style.width = pct + '%';
+  if (done.scaleDiv) document.getElementById('bdgScale')?.classList.add('earned');
+  if (done.critique) document.getElementById('bdgSniper')?.classList.add('earned');
+  if (done.post && state.postScore >= 5) document.getElementById('bdgChamp')?.classList.add('earned');
+  refreshNextButtons();
+  saveLocalState();
+}
+
+function startModule() {
+  const inp = document.getElementById('studentName');
+  const val = inp.value.trim();
+  if (!val) {
+    document.getElementById('gateErr').style.display = 'block';
+    inp.focus();
+    return;
+  }
+  document.getElementById('gateErr').style.display = 'none';
+  document.getElementById('headerStudentName').textContent = val;
+  document.getElementById('repName').textContent = val;
+  document.getElementById('welcomeGate').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  saveLocalState();
+}
+
+function unlockTab(id) {
+  unlocked[id] = true;
+  refreshTabLocks();
+  saveLocalState();
+}
+
+function refreshTabLocks() {
+  const labels = {
+    tab2: '2. Pretest',
+    tab3: '3. Concept & Simulation',
+    tab4: '4. Practice & Adaptive Track',
+    tab5: '5. Posttest & Performance',
+    tab6: '6. Mastery Report'
+  };
+  Object.keys(labels).forEach(id => {
+    const b = document.getElementById('btn_' + id);
+    if (!b) return;
+    if (previewMode || unlocked[id]) {
+      b.classList.remove('locked');
+      b.textContent = labels[id];
+    } else {
+      b.classList.add('locked');
+      b.textContent = '🔒 ' + labels[id];
+    }
+  });
+}
+
+function togglePreviewMode() {
+  if (!previewMode) {
+    const code = prompt('Enter Teacher Preview Passcode (default: 2026):');
+    if (code === null) return;
+    if (code.trim() !== '2026') {
+      showToast('Incorrect passcode — Teacher Mode is restricted to instructors.');
+      return;
+    }
+  }
+  previewMode = !previewMode;
+  const btn = document.getElementById('previewBtn');
+  if (previewMode) {
+    btn.textContent = 'Teacher Mode 🔓';
+    btn.style.background = '#16a34a';
+    document.getElementById('remedialBox').style.display = 'block';
+    document.getElementById('enrichBox').style.display = 'block';
+    document.getElementById('adaptiveLockMsg').style.display = 'none';
+    showToast('Teacher Mode enabled: all stages and tracks unlocked.');
+  } else {
+    btn.textContent = 'Teacher Mode 🔒';
+    btn.style.background = 'rgba(255,255,255,0.18)';
+    if (!done.formative) {
+      document.getElementById('remedialBox').style.display = 'none';
+      document.getElementById('enrichBox').style.display = 'none';
+      document.getElementById('adaptiveLockMsg').style.display = 'block';
+    }
+    showToast('Returned to sequential student mode.');
+  }
+  refreshTabLocks();
+  refreshNextButtons();
+}
+
+function checkTab5Unlock() {
+  if (done.critique && done.formative && done.track1 && done.track2 && done.track3 && done.track4) unlockTab('tab5');
+}
+
+function checkTab6Unlock() {
+  if (done.post && done.perf && done.reflect) unlockTab('tab6');
+}
+
+const preQuestions = [
+  {
+    q: '1. Translating "when 8 is subtracted from 3 times a number <span class="ltr">x</span>, the result is <span class="ltr">-5</span>" into an equation gives:',
+    opts: ["3x - 8 = -5", "8 - 3x = -5", "3(x - 8) = -5", "3x + 8 = -5"],
+    ans: 0,
+    codes: ["", "E1", "E1", "E1"],
+    fb: ["Great! Whatever follows 'from' (3x) comes first.", "Translation error (E1): 'subtract a from b' is written (b - a), i.e. 3x - 8.", "Error (E1): 3 times applies only to x, not the difference.", "Error (E1): 'subtracted' means minus (-), not plus (+)."]
+  },
+  {
+    q: '2. A student bought 3 notebooks at <span class="ltr">x</span> EGP each + 10 EGP delivery, paying 70 EGP total. The equation is:',
+    opts: ["3(x + 10) = 70", "3x + 10 = 70", "x + 30 = 70", "3x - 10 = 70"],
+    ans: 1,
+    codes: ["E1", "", "E1", "E1"],
+    fb: ["Error (E1): delivery is paid once, not per notebook.", "Excellent! 3 notebooks = 3x, plus fixed delivery = +10.", "Error (E1): cost of 3 notebooks is 3x, not x + 30.", "Error (E1): delivery fee is added to the total, not subtracted."]
+  },
+  {
+    q: '3. If the replacement set is <span class="ltr">{2, 3, 4}</span>, the solution set of <span class="ltr">2x + 1 = 7</span> is:',
+    opts: ["{2}", "{3}", "{4}", "∅"],
+    ans: 1,
+    codes: ["E2", "", "E2", "E2"],
+    fb: ["Substitution error (E2): at x=2, 2(2)+1 = 5 ≠ 7.", "Awesome! Substituting 3 gives 2(3)+1 = 7.", "Substitution error (E2): at x=4, 2(4)+1 = 9 ≠ 7.", "Error (E2): 3 is in the replacement set and satisfies the equation."]
+  },
+  {
+    q: '4. The solution set of <span class="ltr">2x + 7 = 3</span> in the Natural Numbers <span class="ltr">N</span> is:',
+    opts: ["{-2}", "{2}", "{5}", "∅"],
+    ans: 3,
+    codes: ["E2", "E3", "E3", ""],
+    fb: ["Watch out (E2)! x = -2 is algebraically true, but -2 ∉ N!", "Sign error (E3): 3 - 7 = -4, not +4.", "Inverse operation error (E3): subtract 7 from 3, don't add.", "Excellent! Since x = -2 ∉ N, the solution set in N is ∅."]
+  },
+  {
+    q: '5. The solution set of <span class="ltr">2x - 5 = -17</span> in the Integers <span class="ltr">Z</span> is:',
+    opts: ["{-11}", "{-6}", "{6}", "∅"],
+    ans: 1,
+    codes: ["E3", "", "E3", "E2"],
+    fb: ["Inverse operation error (E3): add +5 to both sides: -17 + 5 = -12.", "Well done! -12 ÷ 2 = -6, which is an integer in Z.", "Sign error (E3): negative ÷ positive = negative (-6, not +6).", "Error (E2): remember negative integers belong to Z."]
+  },
+  {
+    q: '6. Which of the following equations has NO solution in <span class="ltr">Z</span>?',
+    opts: ["6x = 12", "6x = 15", "6x = 18", "6x = 24"],
+    ans: 1,
+    codes: ["E2", "", "E2", "E2"],
+    fb: ["Error (E2): solution is x = 2 ∈ Z.", "Correct! x = 15/6 = 2.5 is rational and not in Z.", "Error (E2): solution is x = 3 ∈ Z.", "Error (E2): solution is x = 4 ∈ Z."]
+  },
+  {
+    q: '7. The correct first step using the distributive property for <span class="ltr">2(x - 3) = 8</span> is:',
+    opts: ["2x - 3 = 8", "2x - 6 = 8", "2x + 6 = 8", "x - 3 = 8"],
+    ans: 1,
+    codes: ["E4", "", "E3", "E4"],
+    fb: ["Distribution error (E4): you multiplied 2 by x but forgot -3!", "Excellent! Distribute to both terms: 2×x - 2×3 = 2x - 6.", "Sign error (E3): (+2) × (-3) = -6.", "Error (E4): you cannot drop 2 without dividing the other side by 2."]
+  },
+  {
+    q: '8. The solution set of <span class="ltr">3x + 11 = 9</span> in the Rational Numbers <span class="ltr">Q</span> is:',
+    opts: ["{-2/3}", "{2/3}", "{20/3}", "∅"],
+    ans: 0,
+    codes: ["", "E3", "E3", "E2"],
+    fb: ["Great! 3x = -2 ⇒ x = -2/3 ∈ Q.", "Sign error (E3): 9 - 11 = -2, not +2.", "Error (E3): subtract 11 from both sides, don't add.", "Error (E2): negative fractions belong to Q."]
+  }
+];
+
+const postQuestions = [
+  { q: '1. Translating "when 5 is subtracted from twice a number <span class="ltr">x</span>, the result is 13" gives:', opts: ["5 - 2x = 13", "2x - 5 = 13", "2(x - 5) = 13", "2x + 5 = 13"], ans: 1, codes: ["E1","","E1","E1"], fb: ["Check subtraction order (E1).", "Well done!", "Twice applies only to x.", "Subtract (-), not add (+)."] },
+  { q: '2. Osama ordered 4 meals at <span class="ltr">x</span> EGP each + 20 EGP delivery, paying 260 EGP total. The equation is:', opts: ["4(x + 20) = 260", "4x - 20 = 260", "4x + 20 = 260", "x + 80 = 260"], ans: 2, codes: ["E4","E1","","E1"], fb: ["Delivery is paid once.", "Delivery is added.", "Excellent!", "Check the 4 meals term."] },
+  { q: '3. If the replacement set is <span class="ltr">{1, 2, 3, 4}</span>, the solution set of <span class="ltr">3x - 2 = 10</span> is:', opts: ["{2}", "{3}", "{4}", "∅"], ans: 2, codes: ["E2","E2","","E2"], fb: ["3(2)-2=4.", "3(3)-2=7.", "Great! 3(4)-2=10.", "4 is in the set and works."] },
+  { q: '4. The solution set of <span class="ltr">3x + 10 = 1</span> in <span class="ltr">N</span> is:', opts: ["{-3}", "{3}", "∅", "{11/3}"], ans: 2, codes: ["E2","E3","","E3"], fb: ["-3 ∉ N!", "Check the sign.", "Awesome! -3 does not belong to N.", "Subtract 10 from 1."] },
+  { q: '5. The solution set of <span class="ltr">4 - 3x = 19</span> in <span class="ltr">Z</span> is:', opts: ["{-5}", "{5}", "{-23/3}", "∅"], ans: 0, codes: ["","E3","E3","E2"], fb: ["Excellent! -3x = 15 ⇒ x = -5 ∈ Z.", "Watch the negative sign.", "Subtract 4 from 19.", "-5 ∈ Z."] },
+  { q: '6. Which of the following equations HAS a solution in <span class="ltr">N</span>?', opts: ["x + 9 = 4", "4x = 10", "2(x + 7) = 10", "4 + 5x = 9"], ans: 3, codes: ["E2","E2","E2",""], fb: ["x = -5 ∉ N.", "x = 2.5 ∉ N.", "x = -2 ∉ N.", "Great! x = 1 ∈ N."] },
+  { q: '7. The solution set of <span class="ltr">3(x - 5) = -18</span> in <span class="ltr">Q</span> is:', opts: ["{-1}", "{1}", "{-13/3}", "{-11}"], ans: 0, codes: ["","E3","E4","E3"], fb: ["Awesome! x - 5 = -6 ⇒ x = -1.", "Check the sign.", "Distribute 3 to -5.", "Add 15 to -18 to get -3."] },
+  { q: '8. The solution set of <span class="ltr">2y - 5 = -2</span> in <span class="ltr">Q</span> is:', opts: ["{-3/2}", "{3/2}", "{7/2}", "∅"], ans: 1, codes: ["E3","","E3","E2"], fb: ["-2 + 5 = +3.", "Great! 2y = 3 ⇒ y = 3/2 ∈ Q.", "Add +5 to -2.", "Fractions belong to Q."] }
+];
+
+const state = {
+  preScore: null,
+  formScore: null,
+  postScore: null,
+  track: null,
+  errors: { E1: 0, E2: 0, E3: 0, E4: 0 },
+  postErrors: { E1: 0, E2: 0, E3: 0, E4: 0 },
+  aiCount: 0,
+  perf: "",
+  reflection: ""
+};
+
+const quizIdx = {};
+
+function renderQuiz(list, containerId, prefix) {
+  quizIdx[prefix] = 0;
+  const el = document.getElementById(containerId);
+  el.innerHTML = list.map((item, idx) => `
+    <div class="q-item ${idx === 0 ? 'q-active' : ''}" id="${prefix}_q_${idx}">
+      <div class="q-text">${item.q}</div>
+      ${item.opts.map((o, oi) => `
+        <label class="opt-label">
+          <input type="radio" name="${prefix}_${idx}" value="${oi}" onchange="checkQuizComplete('${prefix}', ${list.length})">
+          <span class="ltr">${o}</span>
+        </label>
+      `).join("")}
+      <div id="${prefix}_fb_${idx}" class="feedback-box"></div>
+    </div>
+  `).join("") + `
+    <div class="quiz-pager" style="margin-top:10px; margin-bottom:0;">
+      <button type="button" class="btn btn-outline" style="padding:5px 12px; font-size:0.8rem;" onclick="stepQuiz('${prefix}', '${containerId}', -1, ${list.length})">← Previous Question</button>
+      <span id="${prefix}_counter">Question 1 of ${list.length}</span>
+      <button type="button" class="btn btn-outline" style="padding:5px 12px; font-size:0.8rem;" onclick="stepQuiz('${prefix}', '${containerId}', 1, ${list.length})">Next Question →</button>
+    </div>
+  `;
+}
+
+function checkQuizComplete(prefix, total) {
+  let answered = 0;
+  for (let i = 0; i < total; i++) {
+    if (document.querySelector(`input[name="${prefix}_${i}"]:checked`)) answered++;
+  }
+  const btn = document.getElementById(`submit_${prefix}`);
+  if (btn) btn.style.display = (answered === total) ? 'inline-block' : 'none';
+}
+
+function stepQuiz(prefix, containerId, delta, total) {
+  let cur = (quizIdx[prefix] || 0) + delta;
+  if (cur < 0) cur = 0;
+  if (cur >= total) cur = total - 1;
+  quizIdx[prefix] = cur;
+  for (let i = 0; i < total; i++) {
+    const qEl = document.getElementById(`${prefix}_q_${i}`);
+    if (qEl) qEl.classList.toggle('q-active', i === cur);
+  }
+  const cnt = document.getElementById(`${prefix}_counter`);
+  if (cnt) cnt.textContent = `Question ${cur + 1} of ${total}`;
+}
+
+function gradeQuiz(type) {
+  const list = type === 'pre' ? preQuestions : postQuestions;
+  const prefix = type;
+  let unanswered = 0;
+  list.forEach((item, idx) => {
+    if (!document.querySelector(`input[name="${prefix}_${idx}"]:checked`)) unanswered++;
+  });
+  if (unanswered > 0) {
+    showToast(`Please answer all questions first (${unanswered} remaining).`);
+    return;
+  }
+
+  let score = 0;
+  if (type === 'pre') state.errors = { E1: 0, E2: 0, E3: 0, E4: 0 };
+  else state.postErrors = { E1: 0, E2: 0, E3: 0, E4: 0 };
+
+  list.forEach((item, idx) => {
+    const sel = document.querySelector(`input[name="${prefix}_${idx}"]:checked`);
+    const fb = document.getElementById(`${prefix}_fb_${idx}`);
+    const val = parseInt(sel.value, 10);
+    if (val === item.ans) {
+      score++;
+      if (type === 'post') {
+        fb.className = "feedback-box fb-ok";
+        fb.textContent = "✔ " + item.fb[val];
+      }
+    } else {
+      if (type === 'post') {
+        fb.className = "feedback-box fb-err";
+        fb.textContent = "✘ " + item.fb[val];
+        if (item.codes && item.codes[val]) state.postErrors[item.codes[val]]++;
+      } else if (item.codes && item.codes[val]) {
+        state.errors[item.codes[val]]++;
+      }
+    }
+  });
+
+  if (type === 'pre') {
+    state.preScore = score;
+    const firstTime = !done.pre;
+    done.pre = true;
+    if (firstTime) addXP(20);
+    unlockTab('tab3');
+    refreshNextButtons();
+    const sum = document.getElementById("preSummary");
+    sum.style.display = "block";
+    const weak = Object.entries(state.errors).filter(([,v]) => v > 0).map(([k]) => k);
+    const pathText = score >= 7 ? "Strong starting level (follow the lesson and confirm mastery in the Formative Quiz)" : "Focus on error types: " + (weak.join(", ") || "general review") + " during the lesson";
+    sum.innerHTML = `<strong>Pretest Diagnostic Recorded (${score} / 8)</strong><br>Starting Indicator: <strong>${pathText}</strong><br><span style="font-size:0.82rem; color:#475569;">(Detailed pretest answers are withheld to preserve measurement validity).</span><br><button class="btn" style="margin-top:8px;" onclick="goTab('tab3')">Start Concept &amp; Simulation →</button>`;
+  } else {
+    state.postScore = score;
+    const firstTime = !done.post;
+    done.post = true;
+    if (firstTime) addXP(30, score >= 5 ? 'bdgChamp' : null);
+    checkTab6Unlock();
+    refreshNextButtons();
+    const sum = document.getElementById("postSummary");
+    sum.style.display = "block";
+    const gain = state.preScore !== null ? (score - state.preScore) : score;
+    sum.innerHTML = `<strong>Posttest Score: ${score} / 8 (Gain over Pretest: ${gain >= 0 ? "+"+gain : gain})</strong>`;
+  }
+  updateProgressBar();
+  updateAnalytics();
+}
+
+const sectionCardIdx = { tab1: 0, tab2: 0, tab3: 0, tab4: 0, tab5: 0, tab6: 0 };
+
+function initCardPagers() {
+  document.querySelectorAll('.section').forEach(sec => {
+    const cards = Array.from(sec.children).filter(c => c.classList.contains('card'));
+    cards.forEach((c, i) => {
+      if (i === 0) c.classList.add('card-active');
+      if (cards.length > 1) {
+        const badge = document.createElement('div');
+        badge.className = 'card-step-badge';
+        badge.textContent = `Part ${i + 1} of ${cards.length}`;
+        c.insertBefore(badge, c.firstChild);
+
+        const pager = document.createElement('div');
+        pager.className = 'card-pager';
+        const prevBtn = document.createElement('button');
+        prevBtn.type = 'button';
+        prevBtn.className = 'btn btn-outline';
+        prevBtn.textContent = '← Previous Part';
+        prevBtn.style.visibility = i === 0 ? 'hidden' : 'visible';
+        prevBtn.onclick = () => stepCard(sec.id, -1);
+
+        const nextBtn = document.createElement('button');
+        nextBtn.type = 'button';
+        nextBtn.className = 'btn';
+        nextBtn.textContent = 'Next Part →';
+        nextBtn.id = `next_${sec.id}_${i}`;
+        nextBtn.style.display = i === cards.length - 1 ? 'none' : 'inline-block';
+        nextBtn.onclick = () => stepCard(sec.id, 1);
+
+        pager.appendChild(prevBtn);
+        pager.appendChild(nextBtn);
+        c.appendChild(pager);
+      }
+    });
+  });
+  refreshNextButtons();
+}
+
+function isCardComplete(secId, idx) {
+  if (previewMode) return true;
+  if (secId === 'tab1' && idx === 0) return done.taxi;
+  if (secId === 'tab2' && idx === 0) return done.pre;
+  if (secId === 'tab3') {
+    if (idx === 0) return done.video;
+    if (idx === 1) return done.scaleDiv;
+    if (idx === 2) return true;
+    if (idx === 3) return true;
+  }
+  if (secId === 'tab4') {
+    if (idx === 0) return done.critique;
+    if (idx === 1) return done.formative;
+  }
+  if (secId === 'tab5') {
+    if (idx === 0) return done.post;
+    if (idx === 1) return done.perf;
+  }
+  return true;
+}
+
+function refreshNextButtons() {
+  ['tab1','tab2','tab3','tab4','tab5'].forEach(secId => {
+    const sec = document.getElementById(secId);
+    if (!sec) return;
+    const cards = Array.from(sec.children).filter(c => c.classList.contains('card'));
+    cards.forEach((_, i) => {
+      const btn = document.getElementById(`next_${secId}_${i}`);
+      if (!btn || i === cards.length - 1) return;
+      btn.style.display = isCardComplete(secId, i) ? 'inline-block' : 'none';
+    });
+  });
+}
+
+function stepCard(secId, delta) {
+  const sec = document.getElementById(secId);
+  const cards = Array.from(sec.children).filter(c => c.classList.contains('card'));
+  const cur = sectionCardIdx[secId] || 0;
+  if (delta > 0 && !isCardComplete(secId, cur)) {
+    showToast('Complete the current activity first to unlock the next part.');
+    return;
+  }
+  let next = cur + delta;
+  if (next < 0) next = 0;
+  if (next >= cards.length) next = cards.length - 1;
+  sectionCardIdx[secId] = next;
+  cards.forEach((c, i) => c.classList.toggle('card-active', i === next));
+  if (secId === 'tab3' && next === cards.length - 1) unlockTab('tab4');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goTab(id) {
+  const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick')?.includes(`'${id}'`));
+  showTab(id, btn);
+}
+
+function updateTaxi(val) {
+  document.getElementById("kmVal").textContent = val;
+  document.getElementById("kmVal2").textContent = val;
+  const fare = 5.5 * val + 10;
+  document.getElementById("fareVal").textContent = fare;
+  const msg = document.getElementById("taxiMsg");
+  const firstTime = !done.taxi;
+  done.taxi = true;
+  unlockTab('tab2');
+  refreshNextButtons();
+  if (firstTime) { addXP(10); updateProgressBar(); }
+  if (fare === 87) {
+    msg.className = "feedback-box fb-ok";
+    msg.innerHTML = "🎉 Bingo! Distance = <strong>14 km</strong> because <span class='ltr'>5.5(14) + 10 = 87</span>. Click <strong>Next Part →</strong> below.";
+  } else if (fare < 87) {
+    msg.className = "feedback-box fb-warn";
+    msg.textContent = "Less than 87 pounds — try increasing the distance!";
+  } else {
+    msg.className = "feedback-box fb-err";
+    msg.textContent = "More than 87 pounds — try decreasing the distance!";
+  }
+  refreshTabLocks();
+  refreshNextButtons();
+  updateAnalytics();
+}
+
+const formativeQuestions = [
+  { q: '1. Translate "subtract 6 from 3 times a number <span class="ltr">x</span> equals <span class="ltr">12</span>":', opts: ["6 - 3x = 12", "3x - 6 = 12", "3(x - 6) = 12", "3x + 6 = 12"], ans: 1, fb: ["Check subtraction order (what follows 'from' comes first).", "Excellent!", "3 times applies only to x.", "Operation is subtraction (-), not addition (+)."] },
+  { q: '2. The solution set of <span class="ltr">3x + 9 = 3</span> in <span class="ltr">N</span> is:', opts: ["{-2}", "{2}", "∅", "{4}"], ans: 2, fb: ["x = -2 is algebraically true, but -2 ∉ N!", "Check sign: 3 - 9 = -6.", "Great! Since -2 ∉ N, S.S. = ∅.", "Subtract 9 from both sides."] },
+  { q: '3. The solution set of <span class="ltr">5 - 2x = 11</span> in <span class="ltr">Z</span> is:', opts: ["{-3}", "{3}", "{-8}", "{8}"], ans: 0, fb: ["Awesome! -2x = 6 ⇒ x = -3 ∈ Z.", "Watch the negative sign when dividing by -2.", "Subtract 5 from 11, not the reverse.", "Review steps."] },
+  { q: '4. The solution of <span class="ltr">4(x - 1) = 12</span> in <span class="ltr">Q</span> is:', opts: ["x = 2", "x = 3.25", "x = 4", "x = -2"], ans: 2, fb: ["When distributing, 4 × (-1) = -4.", "Distribute to -1 as well!", "Excellent! x - 1 = 3 ⇒ x = 4.", "Add +1 to both sides."] }
+];
+
+let currentTrack = null;
+
+function gradeFormative() {
+  let unanswered = 0;
+  formativeQuestions.forEach((_, idx) => {
+    if (!document.querySelector(`input[name="form_${idx}"]:checked`)) unanswered++;
+  });
+  if (unanswered > 0) {
+    showToast(`Answer all 4 formative questions first (${unanswered} remaining).`);
+  }
+  let score = 0;
+  formativeQuestions.forEach((item, idx) => {
+    const sel = document.querySelector(`input[name="form_${idx}"]:checked`);
+    const fb = document.getElementById(`form_fb_${idx}`);
+    if (!sel) { fb.className = "feedback-box fb-err"; fb.textContent = "Select an answer first."; return; }
+    const val = parseInt(sel.value, 10);
+    if (val === item.ans) { score++; fb.className = "feedback-box fb-ok"; fb.textContent = "✔ " + item.fb[val]; }
+    else { fb.className = "feedback-box fb-err"; fb.textContent = "✘ " + item.fb[val]; }
+  });
+  if (unanswered > 0) return;
+
+  done.formative = true;
+  state.formScore = score;
+  done.track1 = false;
+  done.track2 = false;
+  done.track3 = false;
+  done.track4 = false;
+  updateProgressBar();
+  const sum = document.getElementById('formativeSummary');
+  sum.style.display = 'block';
+  if (score >= 3) {
+    currentTrack = 'enrich';
+    state.track = 'enrich';
+    sum.innerHTML = `<strong>Formative Score: ${score} / 4</strong> — Outstanding! You've been assigned the <strong>Enrichment Track</strong> in the next part. Click <strong>"Next Part →"</strong> below.`;
+    document.getElementById('adaptiveTitle').textContent = "Your Assigned Track: Enrichment Track";
+    document.getElementById('enrichBox').style.display = 'block';
+    document.getElementById('remedialBox').style.display = 'none';
+  } else {
+    currentTrack = 'remedial';
+    state.track = 'remedial';
+    sum.innerHTML = `<strong>Formative Score: ${score} / 4</strong> — Let's reinforce a few steps! You've been assigned the <strong>Remedial Track</strong> in the next part. Click <strong>"Next Part →"</strong> below.`;
+    document.getElementById('adaptiveTitle').textContent = "Your Assigned Track: Remedial Track";
+    document.getElementById('remedialBox').style.display = 'block';
+    document.getElementById('enrichBox').style.display = 'none';
+  }
+  saveLocalState();
+  checkTab5Unlock();
+  updateProgressBar();
+}
+
+function toggleOtherTrack() {
+  const r = document.getElementById('remedialBox');
+  const e = document.getElementById('enrichBox');
+  if (r.style.display === 'block' && e.style.display === 'none') {
+    e.style.display = 'block';
+  } else if (e.style.display === 'block' && r.style.display === 'none') {
+    r.style.display = 'block';
+  } else {
+    if (currentTrack === 'enrich') r.style.display = 'none';
+    else e.style.display = 'none';
+  }
+}
+
+function showTab(id, btn) {
+  if (!document.getElementById('studentName').value.trim()) {
+    document.getElementById('gateErr').style.display = 'block';
+    return;
+  }
+  if (!previewMode && !unlocked[id]) {
+    const reqs = {
+      tab2: 'Try moving the taxi slider first to unlock the Pretest.',
+      tab3: 'Answer all 8 Pretest questions and click Submit first.',
+      tab4: 'Complete the Concept & Simulation section (through the last part) first.',
+      tab5: 'Complete "Spot the Error", the Formative Quiz, and your Assigned Track first.',
+      tab6: 'Complete the Posttest, Performance Task, and Reflection to unlock your Report.'
+    };
+    showToast(reqs[id] || 'Complete the current stage first.');
+    return;
+  }
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const sec = document.getElementById(id);
+  sec.classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'tab3') {
+    const cards = Array.from(sec.children).filter(c => c.classList.contains('card'));
+    if (cards.length <= 1 || sectionCardIdx[id] === cards.length - 1) unlockTab('tab4');
+  }
+  if (id === 'tab4') {
+    const lockMsg = document.getElementById('adaptiveLockMsg');
+    if (lockMsg) lockMsg.style.display = (previewMode || done.formative) ? 'none' : 'block';
+  }
+  updateAnalytics();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+let scaleState = 0;
+function scaleStep(action) {
+  const lt = document.getElementById("leftTokens");
+  const rt = document.getElementById("rightTokens");
+  const le = document.getElementById("leftExpr");
+  const re = document.getElementById("rightExpr");
+  const msg = document.getElementById("scaleMsg");
+
+  if (action === 'reset') {
+    scaleState = 0;
+    le.textContent = "2x + 3"; re.textContent = "7";
+    lt.innerHTML = '<span class="tok-x">x</span><span class="tok-x">x</span><span class="tok-1">1</span><span class="tok-1">1</span><span class="tok-1">1</span>';
+    rt.innerHTML = '<span class="tok-1">1</span>'.repeat(7);
+    msg.className = "feedback-box fb-warn";
+    msg.innerHTML = "Goal: Isolate <span class='ltr'>x</span> on one pan while keeping the scale balanced.";
+  } else if (action === 'sub3') {
+    if (scaleState !== 0) { msg.textContent = "Reset the balance first or proceed to Step 2!"; return; }
+    scaleState = 1;
+    done.scaleSub = true;
+    le.textContent = "2x"; re.textContent = "4";
+    lt.innerHTML = '<span class="tok-x">x</span><span class="tok-x">x</span>';
+    rt.innerHTML = '<span class="tok-1">1</span>'.repeat(4);
+    msg.className = "feedback-box fb-ok";
+    msg.textContent = "Great! Subtracting 3 from both pans keeps it balanced: 2x = 4. Now click Step 2!";
+  } else if (action === 'div2') {
+    if (scaleState !== 1) { msg.className = "feedback-box fb-err"; msg.textContent = "Subtract 3 from both sides first (Step 1) before dividing!"; return; }
+    scaleState = 2;
+    le.textContent = "x"; re.textContent = "2";
+    lt.innerHTML = '<span class="tok-x">x</span>';
+    rt.innerHTML = '<span class="tok-1">1</span><span class="tok-1">1</span>';
+    msg.className = "feedback-box fb-ok";
+    const firstTime = !done.scaleDiv;
+    done.scaleDiv = true;
+    if (firstTime) addXP(20, 'bdgScale');
+    refreshNextButtons();
+    msg.textContent = "🎉 Awesome! So x = 2. Click 'Next Part →' to continue!";
+  }
+}
+
+function checkCritique(who) {
+  const firstTime = !done.critique;
+  done.critique = true;
+  if (firstTime) addXP(15, 'bdgSniper');
+  checkTab5Unlock();
+  refreshNextButtons();
+  const fb = document.getElementById('critiqueFb');
+  if (who === 'noha') {
+    fb.className = "feedback-box fb-ok";
+    fb.textContent = "✔ Well done! Noha subtracted 7 from both sides (16 - 7 = 9), whereas Ahmed added 7 by mistake.";
+  } else {
+    fb.className = "feedback-box fb-err";
+    fb.textContent = "✘ Check Ahmed's step: moving +7 to the other side requires subtracting 7 (-7), not adding!";
+  }
+}
+
+function adaptiveCheck(track, ans) {
+  if (track === 'remedial') {
+    const fb = document.getElementById('remedialFb');
+    if (ans === 'empty') {
+      done.track1 = true;
+      fb.className = "feedback-box fb-ok";
+      fb.textContent = "✔ Excellent! Dividing by 3 gives x - 2 = -4 ⇒ x = -2, and since -2 ∉ N, S.S. = ∅.";
+    } else {
+      fb.className = "feedback-box fb-err";
+      fb.textContent = "✘ Watch out: x = -2, but the question asks for the solution set in N (Natural Numbers only)! Try again.";
+    }
+  } else if (track === 'remedial2') {
+    const fb = document.getElementById('remedialFb2');
+    if (ans === 'ok') {
+      done.track2 = true;
+      fb.className = "feedback-box fb-ok";
+      fb.textContent = "✔ Great! What follows 'from' (twice the number = 2x) comes first.";
+    } else {
+      fb.className = "feedback-box fb-err";
+      fb.textContent = "✘ Reversed order! 'Subtract 4 from 2x' means 2x - 4. Choose the correct answer to continue.";
+    }
+  } else if (track === 'remedial3') {
+    const fb = document.getElementById('remedialFb3');
+    if (ans === 'ok') {
+      done.track3 = true;
+      fb.className = "feedback-box fb-ok";
+      fb.textContent = "✔ Excellent! You distributed properly (2x + 6 = 4 ⇒ x = -1) and noticed -1 ∉ N!";
+    } else if (ans === 'err1') {
+      fb.className = "feedback-box fb-err";
+      fb.textContent = "✘ You forgot to multiply 2 by +3 inside the parentheses! Try again.";
+    } else {
+      fb.className = "feedback-box fb-err";
+      fb.textContent = "✘ Distribution is right, but remember -1 does not belong to N! Choose the correct option.";
+    }
+  } else if (track === 'remedial4') {
+    const fb = document.getElementById('remedialFb4');
+    if (ans === 'yes') {
+      done.track4 = true;
+      fb.className = "feedback-box fb-ok";
+      fb.textContent = "✔ Well done! 5(3) - 2 = 15 - 2 = 13, so both sides are equal.";
+    } else {
+      fb.className = "feedback-box fb-err";
+      fb.textContent = "✘ Try substituting: 5 × 3 - 2 = 15 - 2 = 13, which equals the right side! Choose the correct answer.";
+    }
+  } else if (track === 'enrich') {
+    const fb = document.getElementById('enrichFb');
+    if (ans === '10') {
+      done.track1 = true;
+      fb.className = "feedback-box fb-ok";
+      fb.textContent = "✔ Genius! Equation: 20x + 50(42 - x) = 1800 ⇒ -30x = -300 ⇒ x = 10 notes.";
+    } else {
+      fb.className = "feedback-box fb-err";
+      fb.textContent = "✘ Hint: Let 20 EGP notes = x, so 50 EGP notes = (42 - x). Try again!";
+    }
+  } else if (track === 'enrich2') {
+    const fb = document.getElementById('enrichFb2');
+    if (ans === '22') {
+      done.track2 = true;
+      fb.className = "feedback-box fb-ok";
+      fb.textContent = "✔ Amazing! (x + 2) + 1 (Salma) + (3x - 4) = 35 ⇒ 4x - 1 = 35 ⇒ x = 9; ahead of her: x + 2 = 11 people × 2 min = 22 minutes!";
+    } else {
+      fb.className = "feedback-box fb-err";
+      fb.textContent = "✘ Hint: Don't forget to include Salma (+1) in the 35-person queue, then multiply people ahead by 2 minutes!";
+    }
+  } else if (track === 'enrich3') {
+    const val = parseFloat(document.getElementById('enrich3Inp').value);
+    const fb = document.getElementById('enrichFb3');
+    if (isNaN(val)) { fb.className = "feedback-box fb-err"; fb.textContent = "Enter a numeric value first."; return; }
+    if (val === 10) {
+      done.track3 = true;
+      fb.className = "feedback-box fb-ok";
+      fb.textContent = "✔ Awesome! x + x + (x + 4) = 34 ⇒ 3x = 30 ⇒ x = 10 cm (sides: 10, 10, 14).";
+    } else {
+      fb.className = "feedback-box fb-err";
+      fb.textContent = "✘ Hint: Add all three sides: x + x + (x + 4) = 34, then solve for x!";
+    }
+  } else if (track === 'enrich4') {
+    const txt = document.getElementById('enrich4Inp').value.trim();
+    const fb = document.getElementById('enrichFb4');
+    if (!txt || !txt.includes('=') || !/[xX]/.test(txt)) { fb.className = "feedback-box fb-err"; fb.textContent = "Enter a valid equation containing (=) and variable x."; return; }
+    const parts = txt.split('=');
+    const L = evalLinearSide(parts[0]), R = evalLinearSide(parts[1]);
+    const netA = L.a - R.a, netB = R.b - L.b;
+    const sol = Math.abs(netA) > 1e-9 ? netB / netA : NaN;
+    if (Math.abs(sol - (-3)) < 1e-6) {
+      done.track4 = true;
+      fb.className = "feedback-box fb-ok";
+      fb.textContent = `✔ Brilliant! Your equation (${txt}) was automatically verified: its solution is x = -3 ∈ Z, and ∅ in N!`;
+    } else {
+      fb.className = "feedback-box fb-err";
+      fb.textContent = `✘ Your equation (${txt}) solves to x = ${isNaN(sol) ? 'undefined' : Math.round(sol*100)/100} instead of -3! Adjust it so x = -3.`;
+    }
+  }
+  saveLocalState();
+  checkTab5Unlock();
+  updateProgressBar();
+}
+
+function savePerf() {
+  const eq = document.getElementById('perfEq').value.trim();
+  const ans = document.getElementById('perfAns').value.trim();
+  if (!eq || !ans) {
+    showToast('Please write both the equation and the explanation first.');
+    return;
+  }
+  done.perf = true;
+  addXP(20);
+  checkTab6Unlock();
+  state.perf = "Eq: " + eq + " | " + ans;
+  const fb = document.getElementById('perfFb');
+  fb.className = "feedback-box fb-ok";
+  fb.innerHTML = "✔ Answer saved! <strong>Verification Model:</strong> <span class='ltr'>2(x + x + 15) = 180 ⇒ 4x + 30 = 180 ⇒ x = 37.5</span> cm (width), length = 52.5 cm. Not valid if integers are required since <span class='ltr'>37.5 ∉ Z</span>.";
+  updateAnalytics();
+}
+
+function saveReflection() {
+  const ref = document.getElementById('reflectText').value.trim();
+  if (!ref) {
+    showToast('Please write your final reflection sentence first.');
+    return;
+  }
+  done.reflect = true;
+  addXP(15);
+  state.reflection = ref;
+  checkTab6Unlock();
+  updateAnalytics();
+  goTab('tab6');
+}
+
+function saveLocalState() {
+  try {
+    const payload = {
+      name: document.getElementById('studentName')?.value.trim() || '',
+      state, done, xp, unlocked, currentTrack
+    };
+    localStorage.setItem('dbr_linear_eq_v2_en', JSON.stringify(payload));
+  } catch {}
+}
+
+function loadLocalState() {
+  try {
+    const raw = localStorage.getItem('dbr_linear_eq_v2_en');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data.name) {
+      document.getElementById('studentName').value = data.name;
+      document.getElementById('headerStudentName').textContent = data.name;
+      document.getElementById('welcomeGate').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+    }
+    if (data.state) Object.assign(state, data.state);
+    if (data.done) Object.assign(done, data.done);
+    if (data.unlocked) Object.assign(unlocked, data.unlocked);
+    if (typeof data.xp === 'number') { xp = data.xp; document.getElementById('xpVal').textContent = xp; }
+    if (data.currentTrack) {
+      currentTrack = data.currentTrack;
+      if (currentTrack === 'enrich') { document.getElementById('enrichBox').style.display = 'block'; document.getElementById('remedialBox').style.display = 'none'; }
+      else if (currentTrack === 'remedial') { document.getElementById('remedialBox').style.display = 'block'; document.getElementById('enrichBox').style.display = 'none'; }
+    }
+    refreshTabLocks();
+    updateProgressBar();
+    updateAnalytics();
+  } catch {}
+}
+
+function resetSession() {
+  if (!confirm('Clear current session progress and start for a new student?')) return;
+  localStorage.removeItem('dbr_linear_eq_v2_en');
+  location.reload();
+}
+
+function getReportSummaryText() {
+  const name = document.getElementById('studentName').value.trim() || "Unspecified";
+  const pre = state.preScore !== null ? `${state.preScore}/8` : "-";
+  const form = state.formScore !== null ? `${state.formScore}/4` : "-";
+  const post = state.postScore !== null ? `${state.postScore}/8` : "-";
+  const track = currentTrack === 'enrich' ? 'E' : (currentTrack === 'remedial' ? 'R' : '-');
+  const errs = Object.entries(state.errors).filter(([,v]) => v > 0).map(([k,v]) => `${k}:${v}`).join(",") || "0";
+  return `N:${name}|PRE:${pre}|FRM:${form}|T:${track}|PST:${post}|ERR:${errs}|XP:${xp}`;
+}
+
+function copyReportText() {
+  const txt = getReportSummaryText();
+  navigator.clipboard?.writeText(txt).then(() => showToast('Summary copied to clipboard!')).catch(() => alert(txt));
+}
+
+// Compact pure-JS QR Code Generator (Byte mode, ECC-L, Versions 1-10)
+const QRGen = (() => {
+  const CAP = [0,17,32,53,78,106,134,154,192,230,271];
+  const BLOCKS = [
+    null,
+    [[1,19,7]], [[1,34,10]], [[1,55,15]], [[1,80,20]], [[1,108,26]],
+    [[2,68,18]], [[2,78,20]], [[2,97,24]], [[2,116,30]], [[2,68,18],[2,69,18]]
+  ];
+  const ALIGN = [[],[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50]];
+
+  const EXP = new Uint8Array(512), LOG = new Uint8Array(256);
+  for (let i = 0, x = 1; i < 255; i++) { EXP[i] = x; EXP[i + 255] = x; LOG[x] = i; x = (x << 1) ^ (x & 128 ? 0x11d : 0); }
+
+  function rsGen(deg) {
+    let p = [1];
+    for (let i = 0; i < deg; i++) {
+      const q = [1, EXP[i]], r = new Array(p.length + 1).fill(0);
+      for (let a = 0; a < p.length; a++) for (let b = 0; b < 2; b++) r[a + b] ^= (p[a] && q[b]) ? EXP[LOG[p[a]] + LOG[q[b]]] : 0;
+      p = r;
+    }
+    return p;
+  }
+
+  function rsRem(data, ecLen) {
+    const gen = rsGen(ecLen), res = new Uint8Array(data.length + ecLen);
+    res.set(data);
+    for (let i = 0; i < data.length; i++) {
+      const f = res[i];
+      if (f) for (let j = 0; j < gen.length; j++) res[i + j] ^= EXP[LOG[f] + LOG[gen[j]]];
+    }
+    return res.slice(data.length);
+  }
+
+  function encodeSVG(text, size = 180) {
+    const bytes = new TextEncoder().encode(text);
+    let ver = 1;
+    while (ver <= 10 && bytes.length + 2 > CAP[ver]) ver++;
+    if (ver > 10) ver = 10;
+    const maxBytes = CAP[ver];
+    const payload = bytes.slice(0, maxBytes);
+
+    const bits = [];
+    const pushBits = (val, len) => { for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1); };
+    pushBits(4, 4);
+    pushBits(payload.length, ver >= 10 ? 16 : 8);
+    payload.forEach(b => pushBits(b, 8));
+    pushBits(0, Math.min(4, maxBytes * 8 - bits.length));
+    while (bits.length % 8) bits.push(0);
+
+    const blks = BLOCKS[ver];
+    const totalData = blks.reduce((s, b) => s + b[0] * b[1], 0);
+    const dataBytes = [];
+    for (let i = 0; i < bits.length; i += 8) {
+      let v = 0; for (let j = 0; j < 8; j++) v = (v << 1) | bits[i + j];
+      dataBytes.push(v);
+    }
+    for (let pad = 0; dataBytes.length < totalData; pad++) dataBytes.push(pad % 2 === 0 ? 0xec : 0x11);
+
+    const dBlocks = [], eBlocks = [];
+    let off = 0;
+    blks.forEach(([cnt, dLen, eLen]) => {
+      for (let i = 0; i < cnt; i++) {
+        const blk = dataBytes.slice(off, off + dLen);
+        off += dLen;
+        dBlocks.push(blk);
+        eBlocks.push(Array.from(rsRem(blk, eLen)));
+      }
+    });
+
+    const codewords = [];
+    const maxD = Math.max(...dBlocks.map(b => b.length));
+    for (let i = 0; i < maxD; i++) dBlocks.forEach(b => { if (i < b.length) codewords.push(b[i]); });
+    const maxE = eBlocks[0].length;
+    for (let i = 0; i < maxE; i++) eBlocks.forEach(b => codewords.push(b[i]));
+
+    const n = ver * 4 + 17;
+    const mat = Array.from({ length: n }, () => new Int8Array(n));
+    const func = Array.from({ length: n }, () => new Uint8Array(n));
+    const setF = (r, c, v) => { if (r >= 0 && r < n && c >= 0 && c < n) { mat[r][c] = v ? 1 : 0; func[r][c] = 1; } };
+
+    const finder = (r0, c0) => {
+      for (let r = -1; r <= 7; r++) for (let c = -1; c <= 7; c++) {
+        const on = (r >= 0 && r <= 6 && c >= 0 && c <= 6) && (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4));
+        setF(r0 + r, c0 + c, on);
+      }
+    };
+    finder(0, 0); finder(0, n - 7); finder(n - 7, 0);
+    for (let i = 8; i < n - 8; i++) { setF(6, i, i % 2 === 0); setF(i, 6, i % 2 === 0); }
+    setF(n - 8, 8, 1);
+
+    const ap = ALIGN[ver];
+    for (let i = 0; i < ap.length; i++) for (let j = 0; j < ap.length; j++) {
+      if ((i === 0 && j === 0) || (i === 0 && j === ap.length - 1) || (i === ap.length - 1 && j === 0)) continue;
+      for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++) setF(ap[i] + dr, ap[j] + dc, Math.max(Math.abs(dr), Math.abs(dc)) !== 1);
+    }
+
+    for (let i = 0; i < 9; i++) { if (i !== 6) { func[8][i] = 1; func[i][8] = 1; } }
+    for (let i = 0; i < 8; i++) { func[8][n - 1 - i] = 1; func[n - 1 - i][8] = 1; }
+    if (ver >= 7) {
+      let rem = ver;
+      for (let i = 0; i < 12; i++) rem = (rem << 1) ^ ((rem >> 11) * 0x1f25);
+      const vbits = (ver << 12) | rem;
+      for (let i = 0; i < 18; i++) { const b = (vbits >> i) & 1; setF(Math.floor(i / 3), n - 11 + (i % 3), b); setF(n - 11 + (i % 3), Math.floor(i / 3), b); }
+    }
+
+    const allBits = [];
+    codewords.forEach(cw => { for (let i = 7; i >= 0; i--) allBits.push((cw >> i) & 1); });
+
+    let bi = 0;
+    for (let c = n - 1; c > 0; c -= 2) {
+      if (c === 6) c--;
+      for (let vert = 0; vert < n; vert++) {
+        const r = ((c + 1) & 2) === 0 ? n - 1 - vert : vert;
+        for (let dc = 0; dc < 2; dc++) {
+          const cc = c - dc;
+          if (!func[r][cc]) {
+            const bit = bi < allBits.length ? allBits[bi++] : 0;
+            const mask = ((r + cc) % 2 === 0) ? 1 : 0;
+            mat[r][cc] = bit ^ mask;
+          }
+        }
+      }
+    }
+
+    const fmt = 0x77c4;
+    for (let i = 0; i < 15; i++) {
+      const bit = (fmt >> i) & 1;
+      if (i < 6) mat[i][8] = bit;
+      else if (i < 8) mat[i + 1][8] = bit;
+      else mat[n - 15 + i][8] = bit;
+      if (i < 8) mat[8][n - 1 - i] = bit;
+      else if (i < 9) mat[8][15 - i] = bit;
+      else mat[8][14 - i] = bit;
+    }
+
+    let paths = '';
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (mat[r][c]) paths += `M${c},${r}h1v1h-1z`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 ${n + 4} ${n + 4}" width="${size}" height="${size}" shape-rendering="crispEdges"><rect x="-2" y="-2" width="${n + 4}" height="${n + 4}" fill="#ffffff"/><path d="${paths}" fill="#0f172a"/></svg>`;
+  }
+  return { encodeSVG };
+})();
+
+function updateAnalytics() {
+  document.getElementById('repName').textContent = document.getElementById('studentName').value.trim() || "Not set";
+  document.getElementById('repPre').textContent = state.preScore !== null ? `${state.preScore} / 8` : "Not completed";
+  document.getElementById('repPost').textContent = state.postScore !== null ? `${state.postScore} / 8` : "Not completed";
+  const errs = Object.entries(state.errors).filter(([,v]) => v > 0).map(([k,v]) => `${k}(${v})`).join(", ");
+  document.getElementById('repErr').textContent = errs || "None";
+  document.getElementById('repPerf').textContent = state.perf || "Not saved";
+  document.getElementById('repRef').textContent = state.reflection || "Not saved";
+  const qrBox = document.getElementById('qrContainer');
+  if (qrBox) qrBox.innerHTML = QRGen.encodeSVG(getReportSummaryText(), 180);
+}
+
+function exportJSON() {
+  const data = {
+    student: document.getElementById('studentName').value || "Unspecified",
+    timestamp: new Date().toISOString(),
+    ...state
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "student_performance_report.json";
+  a.click();
+}
+
+function toggleAI() {
+  document.getElementById('aiDrawer').classList.toggle('open');
+}
+
+function askQuick(txt) {
+  document.getElementById('aiInput').value = txt;
+  sendAI();
+}
+
+function evalLinearSide(expr) {
+  let s = expr.replace(/\s+/g, '').replace(/[yY]/g, 'x').replace(/×/g, '*').replace(/−/g, '-');
+  s = s.replace(/([+-]?\d*\.?\d*)\(([^()]+)\)/g, (_, k, inner) => {
+    const coef = (k === '' || k === '+') ? 1 : (k === '-' ? -1 : parseFloat(k));
+    const innerAb = evalLinearSide(inner);
+    return `${coef * innerAb.a >= 0 ? '+' : ''}${coef * innerAb.a}x${coef * innerAb.b >= 0 ? '+' : ''}${coef * innerAb.b}`;
+  });
+  let a = 0, b = 0;
+  const terms = s.match(/[+-]?[^+-]+/g) || [];
+  for (const t of terms) {
+    if (t.includes('x')) {
+      const c = t.replace('x', '');
+      a += (c === '' || c === '+') ? 1 : (c === '-' ? -1 : parseFloat(c));
+    } else {
+      const v = parseFloat(t);
+      if (!isNaN(v)) b += v;
+    }
+  }
+  return { a, b };
+}
+
+function trySolveEquation(txt) {
+  const m = txt.match(/([0-9xXyY+\-*/().\s×−]+=[^=]+)/);
+  if (!m) return null;
+  const eq = m[1].trim();
+  const parts = eq.split('=');
+  if (parts.length !== 2 || !/[xXyY]/.test(eq)) return null;
+  try {
+    const L = evalLinearSide(parts[0]);
+    const R = evalLinearSide(parts[1]);
+    const netA = L.a - R.a;
+    const netB = R.b - L.b;
+    if (isNaN(netA) || isNaN(netB)) return null;
+    if (Math.abs(netA) < 1e-9) {
+      return Math.abs(netB) < 1e-9 ? 'This is an identity (satisfied by all numbers)!' : 'This equation has no solution (∅).';
+    }
+    const x = Math.round((netB / netA) * 1000) / 1000;
+    const isInt = Number.isInteger(x);
+    const inN = isInt && x >= 0;
+    const inZ = isInt;
+    return `Analysis of <span class="ltr">${eq}</span>:<br>` +
+      `• Combining like terms: <span class="ltr">${Math.round(netA*100)/100}x = ${Math.round(netB*100)/100}</span><br>` +
+      `• Therefore: <strong><span class="ltr">x = ${x}</span></strong><br>` +
+      `• Solution Sets: in <span class="ltr">N</span> = <strong><span class="ltr">${inN ? '{'+x+'}' : '∅'}</span></strong> | in <span class="ltr">Z</span> = <strong><span class="ltr">${inZ ? '{'+x+'}' : '∅'}</span></strong> | in <span class="ltr">Q</span> = <strong><span class="ltr">{${x}}</span></strong>.`;
+  } catch { return null; }
+}
+
+function getContextHint() {
+  const activeSec = document.querySelector('.section.active')?.id || 'tab1';
+  const cardIdx = sectionCardIdx[activeSec] || 0;
+  if (activeSec === 'tab1') return 'You are in the Hook: try moving the distance slider until the taxi fare reaches 87 pounds.';
+  if (activeSec === 'tab2') return 'You are in the Pretest: watch out for "subtract a from b" order and the replacement set (N, Z, or Q).';
+  if (activeSec === 'tab3' && cardIdx === 1) return 'You are in the Balance Lab: first subtract 3 from both sides, then divide by 2 to get x = 2.';
+  if (activeSec === 'tab3') return 'You are in the Concept section: type any equation like 2x + 5 = 15 here and I will solve it step-by-step!';
+  if (activeSec === 'tab4') return 'You are in Practice & Adaptive Track: read the hint under each question or type an equation here.';
+  if (activeSec === 'tab5') return 'Performance Task Hint: Perimeter of rectangle = 2 × (Length + Width). Let Width = x and Length = x + 15, then set equal to 180!';
+  return 'You are in the Mastery Report: scan the QR Code with a phone camera or print your report.';
+}
+
+function sendAI() {
+  const inp = document.getElementById('aiInput');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  state.aiCount++;
+  const box = document.getElementById('aiMsgs');
+  box.innerHTML += `<div class="msg msg-user">${txt}</div>`;
+  inp.value = "";
+
+  const name = document.getElementById('studentName').value.trim() || 'Student';
+  const t = txt.toLowerCase();
+  const activeSec = document.querySelector('.section.active')?.id || 'tab1';
+  const inQuizTab = (activeSec === 'tab2' || activeSec === 'tab5');
+  const eqReply = inQuizTab ? null : trySolveEquation(txt);
+  let reply = "";
+
+  if (eqReply) {
+    reply = eqReply;
+  } else if (inQuizTab && /=/.test(txt)) {
+    reply = `I'm in assessment mode right now, ${name} 🔒; rely on your own understanding for the test, and I'll be happy to solve equations during the Lesson & Practice tabs!`;
+  } else if (t.includes('hi') || t.includes('hello') || t.includes('hey')) {
+    reply = `Welcome, ${name}! 😊 Ask me anything about linear equations, or type an equation (like <span class="ltr">2x + 3 = 11</span>) and I'll solve it with you!`;
+  } else if (t.includes('ok') || t.includes('got it') || t.includes('cool')) {
+    reply = `Awesome, ${name}! 👍 ${getContextHint()}`;
+  } else if (t.includes('thank')) {
+    reply = `You're welcome, ${name}! 🌟 Best of luck, I'm always here if you need help.`;
+  } else if (t.includes('replacement') || t.includes('solution set')) {
+    reply = 'The <strong>replacement set</strong> is the allowed universe of numbers (e.g., <span class="ltr">N, Z, Q</span>), while the <strong>solution set</strong> is the subset of values from it that make both sides equal.';
+  } else if (t.includes('∅') || t.includes('empty')) {
+    reply = 'The solution set is <strong><span class="ltr">∅</span></strong> when the algebraic answer falls outside the replacement set; e.g., <span class="ltr">x = -2</span> when solving in <span class="ltr">N</span>.';
+  } else if (t.includes('subtract') || t.includes('from')) {
+    reply = 'Golden translation rule: whatever comes after <strong>"from"</strong> goes first! Example: "subtract 8 from 3x" is <span class="ltr">3x - 8</span>, NOT <span class="ltr">8 - 3x</span>.';
+  } else if (t.includes('distribut') || t.includes('parenthes') || t.includes('bracket')) {
+    reply = 'In distribution such as <span class="ltr">2(x - 3) = 8</span>: multiply <span class="ltr">2</span> by BOTH <span class="ltr">x</span> and <span class="ltr">-3</span> to get <span class="ltr">2x - 6 = 8</span>.';
+  } else if (t.includes('sign') || t.includes('negative') || t.includes('inverse')) {
+    reply = 'Remember: moving a term to the other side uses the inverse operation (flip its sign), and negative ÷ positive = negative.';
+  } else if (t.includes('natural') || t.includes('integer') || t.includes('rational')) {
+    reply = '<strong><span class="ltr">N</span></strong>: <span class="ltr">{0, 1, 2, ...}</span> | <strong><span class="ltr">Z</span></strong>: <span class="ltr">{..., -2, -1, 0, 1, 2, ...}</span> | <strong><span class="ltr">Q</span></strong>: all fractions &amp; decimals.';
+  } else if (t.includes('money box') || t.includes('notes') || t.includes('banknote')) {
+    reply = 'Money Box Hint: Let 20 EGP notes = <span class="ltr">x</span>, so 50 EGP notes = <span class="ltr">(42 - x)</span>, then sum values: <span class="ltr">20x + 50(42 - x) = 1800</span>.';
+  } else if (t.includes('salma') || t.includes('queue')) {
+    reply = 'Queue Hint: Total people = (ahead) + (Salma = 1) + (behind) = 35. Solve for <span class="ltr">x</span>, then multiply people ahead by 2 minutes!';
+  } else if (t.includes('triangle') || t.includes('perimeter')) {
+    reply = 'Triangle Hint: Perimeter = sum of all 3 sides: <span class="ltr">x + x + (x + 4) = 34</span>.';
+  } else if (t.includes('hint') || t.includes('help') || t.includes('frame') || t.includes('task')) {
+    reply = `Here is a hint for your current step, ${name}:<br>${getContextHint()}`;
+  } else {
+    reply = `I didn't quite catch that, ${name} 🤔 — you can type any equation like <span class="ltr">3x - 6 = 9</span> for a step-by-step solution, or ask about: <em>replacement set, ∅, distribution, subtraction from, or current hint</em>.<br><span style="font-size:0.78rem; color:#475569;">(${getContextHint()})</span>`;
+  }
+
+  box.innerHTML += `<div class="msg msg-bot">${reply}</div>`;
+  box.scrollTop = box.scrollHeight;
+  updateAnalytics();
+}
+
+initCardPagers();
+renderQuiz(preQuestions, 'pretestContainer', 'pre');
+renderQuiz(formativeQuestions, 'formativeContainer', 'form');
+renderQuiz(postQuestions, 'posttestContainer', 'post');
+loadLocalState();
+refreshTabLocks();
+refreshNextButtons();
+updateAnalytics();
+</script>
+</body>
+</html>
