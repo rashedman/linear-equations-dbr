@@ -510,9 +510,10 @@
       <h2>1. Real-Life Hook: The Taxi Fare Problem</h2>
       <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:10px 14px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
         <span style="font-size:0.86rem; font-weight:700; color:#1e3a8a;">🔊 Listen to the problem audio:</span>
-        <audio controls style="height:36px; max-width:100%;">
+        <audio id="taxiAudio" controls onended="done.taxiAudio=true; if(done.taxi) unlockTab('tab2'); refreshNextButtons(); updateProgressBar(); showToast('Great! Audio completed.');" onerror="done.taxiAudio=true; refreshNextButtons();" style="height:36px; max-width:100%;">
           <source src="./assets/taxi_intro_en.mp3" type="audio/mpeg">
         </audio>
+        <span style="width:100%; font-size:0.78rem; color:#b45309; font-weight:700;">⏳ Listen to the audio until the end and move the distance slider to unlock the next part.</span>
       </div>
       <p>
         You took a taxi: the meter starts with a base fare of <strong>10 pounds</strong>, and adds <strong>5.5 pounds</strong> for every kilometer driven.
@@ -911,7 +912,7 @@
 let xp = 0;
 let previewMode = false;
 const done = {
-  taxi: false, pre: false, video: false, scaleSub: false, scaleDiv: false,
+  taxiAudio: false, taxi: false, pre: false, video: false, scaleSub: false, scaleDiv: false,
   critique: false, formative: false, track1: false, track2: false, track3: false, track4: false,
   post: false, perf: false, reflect: false
 };
@@ -960,6 +961,8 @@ function startModule() {
   document.getElementById('welcomeGate').style.display = 'none';
   document.getElementById('mainApp').style.display = 'block';
   saveLocalState();
+  const aud = document.getElementById('taxiAudio');
+  if (aud && !done.taxiAudio) { aud.currentTime = 0; aud.play().catch(() => {}); }
 }
 
 function unlockTab(id) {
@@ -1274,7 +1277,7 @@ function initCardPagers() {
 
 function isCardComplete(secId, idx) {
   if (previewMode) return true;
-  if (secId === 'tab1' && idx === 0) return done.taxi;
+  if (secId === 'tab1' && idx === 0) return done.taxi && done.taxiAudio;
   if (secId === 'tab2' && idx === 0) return done.pre;
   if (secId === 'tab3') {
     if (idx === 0) return done.video;
@@ -1336,7 +1339,7 @@ function updateTaxi(val) {
   const msg = document.getElementById("taxiMsg");
   const firstTime = !done.taxi;
   done.taxi = true;
-  unlockTab('tab2');
+  if (done.taxiAudio) unlockTab('tab2');
   refreshNextButtons();
   if (firstTime) { addXP(10); updateProgressBar(); }
   if (fare === 87) {
