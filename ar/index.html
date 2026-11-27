@@ -555,9 +555,10 @@
       <h2>1. التهيئة وإثارة الانتباه: مشكلة سيارة الأجرة (الحدث 1)</h2>
       <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:8px 12px; margin-bottom:10px;">
         <span style="font-weight:700; font-size:0.85rem; color:var(--primary);">🔊 استمع للمشكلة:</span>
-        <audio id="taxiAudio" controls style="height:34px; flex:1; min-width:220px;">
+        <audio id="taxiAudio" controls onended="done.taxiAudio=true; if(done.taxi) unlockTab('tab2'); refreshNextButtons(); updateProgressBar(); showToast('أحسنت! تم إتمام الاستماع.');" onerror="done.taxiAudio=true; refreshNextButtons();" style="height:34px; flex:1; min-width:220px;">
           <source src="./assets/taxi_intro.mp3" type="audio/mpeg">
         </audio>
+        <span style="width:100%; font-size:0.78rem; color:#b45309; font-weight:700;">⏳ استمع للتسجيل الصوتي حتى النهاية وحرّك مؤشر المسافة للانتقال إلى الجزء التالي.</span>
       </div>
       <p>
         أخذ هاني سيارة أجرة من منزله إلى المدرسة، وكانت تكلفة <strong>فتح العداد تساوي 10 جنيهات</strong>، ويُضاف إليها <strong>5.5 جنيه عن كل كيلومتر</strong> يقطعه السائق.
@@ -1142,7 +1143,7 @@ function gradeQuiz(type) {
 }
 
 const unlocked = { tab1: true, tab2: false, tab3: false, tab4: false, tab5: false, tab6: false };
-const done = { taxi: false, pre: false, video: false, scaleSub: false, scaleDiv: false, traps: false, critique: false, formative: false, track1: false, track2: false, track3: false, track4: false, post: false, perf: false, reflect: false };
+const done = { taxiAudio: false, taxi: false, pre: false, video: false, scaleSub: false, scaleDiv: false, traps: false, critique: false, formative: false, track1: false, track2: false, track3: false, track4: false, post: false, perf: false, reflect: false };
 let teacherMode = false;
 
 let xp = 0;
@@ -1271,6 +1272,8 @@ function startModule() {
   refreshTabLocks();
   refreshNextButtons();
   updateAnalytics();
+  const aud = document.getElementById('taxiAudio');
+  if (aud && !done.taxiAudio) { aud.currentTime = 0; aud.play().catch(() => {}); }
 }
 
 const formativeQuestions = [
@@ -1377,7 +1380,7 @@ const tabEndLabels = {
 
 function canAdvanceCard(secId, idx) {
   if (teacherMode) return true;
-  if (secId === 'tab1' && idx === 0) return done.taxi;
+  if (secId === 'tab1' && idx === 0) return done.taxi && done.taxiAudio;
   if (secId === 'tab3' && idx === 0) return done.video;
   if (secId === 'tab3' && idx === 1) return done.scaleDiv;
   if (secId === 'tab3' && idx === 4) return done.traps;
@@ -1485,7 +1488,7 @@ function updateTaxi() {
   document.getElementById('kmVal').textContent = km;
   document.getElementById('taxiCost').textContent = cost;
   done.taxi = true;
-  unlockTab('tab2');
+  if (done.taxiAudio) unlockTab('tab2');
   updateProgressBar();
   const hint = document.getElementById('taxiHint');
   if (cost === 87) {
